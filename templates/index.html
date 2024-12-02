@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam Review Fetcher</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Steam Review Fetcher</h1>
+        <form action="{{ url_for('get_reviews') }}" method="post">
+            <label for="app_id">App ID:</label>
+            <input type="number" id="app_id" name="app_id" placeholder="Enter App ID (e.g., 570)" required>
+
+            <label for="review_type">Review Type:</label>
+            <select id="review_type" name="review_type">
+                <option value="positive">Positive</option>
+                <option value="negative">Negative</option>
+                <option value="all">All</option>
+            </select>
+
+            <label for="total_reviews">Total Reviews (max 25000):</label>
+            <input type="number" id="total_reviews" name="total_reviews" placeholder="Enter number of reviews" required>
+
+            <button type="submit">Fetch Reviews</button>
+        </form>
+    </div>
+</body>
+</html>
