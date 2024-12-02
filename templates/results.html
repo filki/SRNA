@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review Results</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/results.css') }}">
+    
 </head>
 <body>
     <header>
@@ -12,28 +14,44 @@
     </header>
     <div class="container">
         {% if reviews %}
-            <div class="card">
+            <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Author SteamID</th>
-                            <th>Review</th>
+                            <th class="review">Review</th>
                             <th>Voted Up</th>
                             <th>Playtime Forever</th>
                             <th>Review Score</th>
                             <th>Weighted Vote Score</th>
+                            <th>Timestamp Created</th>
+                            <th>Timestamp Updated</th>
+                            <th>Author Num Games Owned</th>
+                            <th>Author Num Reviews</th>
+                            <th>Author Playtime (Last 2 Weeks)</th>
+                            <th>Author Playtime at Review</th>
                             <th>Comments Count</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for review in reviews %}
                         <tr>
+                            <td>{{ review.id }}</td>
                             <td>{{ review.author_steamid }}</td>
-                            <td>{{ review.review }}</td>
+                            <td class="review">
+                                {{ review.review[:100] }}{% if review.review|length > 100 %}...<a href="#">Read More</a>{% endif %}
+                            </td>
                             <td>{{ 'Yes' if review.voted_up else 'No' }}</td>
                             <td>{{ review.playtime_forever }}</td>
                             <td>{{ review.review_score or 'N/A' }}</td>
                             <td>{{ review.weighted_vote_score }}</td>
+                            <td>{{ review.timestamp_created or 'N/A' }}</td>
+                            <td>{{ review.timestamp_updated or 'N/A' }}</td>
+                            <td>{{ review.author_num_games_owned }}</td>
+                            <td>{{ review.author_num_reviews }}</td>
+                            <td>{{ review.author_playtime_last_two_weeks }}</td>
+                            <td>{{ review.author_playtime_at_review }}</td>
                             <td>{{ review.comments_count }}</td>
                         </tr>
                         {% endfor %}
@@ -41,11 +59,9 @@
                 </table>
             </div>
         {% else %}
-            <div class="card">
-                <p>No reviews available.</p>
-            </div>
+            <p>No reviews available.</p>
         {% endif %}
-        <div class="card">
+        <div class="button-group">
             <a href="{{ url_for('index') }}">
                 <button type="button">Back to Home Page</button>
             </a>

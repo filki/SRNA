@@ -32,7 +32,6 @@ class SteamReview(db.Model):
 @app.route('/')
 def index():
     return render_template('index.html')
-
 @app.route('/get_reviews', methods=['GET', 'POST'])
 def get_reviews():
     if request.method == 'POST':
@@ -46,13 +45,26 @@ def get_reviews():
         # Save reviews to database
         save_reviews_to_db(reviews)
 
-        return redirect(url_for('results'))
+        # Stay on index.html and show success message
+        return render_template('index.html', success_message="Reviews have been successfully fetched and stored.")
     return render_template('index.html')
 
 @app.route('/results')
 def results():
-    records = SteamReview.query.limit(10).all()
-    return render_template('results.html', reviews=records)
+    voted_up = request.args.get('voted_up')  # e.g., "True" or "False"
+    min_playtime = request.args.get('min_playtime', type=int)
+    max_playtime = request.args.get('max_playtime', type=int)
+
+    query = SteamReview.query
+    if voted_up:
+        query = query.filter_by(voted_up=(voted_up == "True"))
+    if min_playtime and max_playtime:
+        query = query.filter(SteamReview.playtime_forever.between(min_playtime, max_playtime))
+
+    reviews = query.all()
+    return render_template('results.html', reviews=reviews)
+
+
 
 def fetch_reviews(app_id, review_type, total_reviews=50):
     url = f"https://store.steampowered.com/appreviews/{app_id}?json=1&num={total_reviews}&filter={review_type}&language=english"

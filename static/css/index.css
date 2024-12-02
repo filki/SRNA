@@ -1,0 +1,94 @@
+/* index.css */
+
+/* Center Alignment for the Page */
+body.index-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full vertical height */
+    margin: 0;
+}
+
+/* Header Styling */
+header h1 {
+    font-size: 3rem; /* Larger header text */
+    color: #4a90e2;
+    margin-bottom: 20px; /* Space below header */
+    text-align: center; /* Wyrównanie tekstu do środka */
+}
+
+/* Form Container */
+.container {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 400px; /* Slightly narrower container for a compact look */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: left;
+}
+
+/* Form Labels and Inputs */
+form label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #555;
+}
+
+form input[type="number"],
+form select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+form input:focus,
+form select:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+}
+
+/* Button Group */
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.button-group button {
+    flex: 1;
+    padding: 10px;
+    height: 50px; /* Consistent height for all buttons */
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.button-group button:hover {
+    background-color: #357ab7;
+    transform: scale(1.05);
+}
+
+.button-group button:active {
+    transform: scale(0.98);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .button-group {
+        flex-direction: column;
+    }
+
+    .button-group button {
+        width: 100%;
+    }
+}

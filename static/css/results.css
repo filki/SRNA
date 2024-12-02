@@ -1,0 +1,89 @@
+/* Table Container */
+.container {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 90%; /* Increase container width */
+    width: 100%; /* Make the table adapt to the screen size */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    overflow-x: auto;
+}
+
+/* Header Styling */
+header h1 {
+    font-size: 3rem; /* Larger header text */
+    color: #4a90e2;
+    margin-bottom: 20px; /* Space below header */
+    text-align: center; /* Wyrównanie tekstu do środka */
+
+}
+/* Table Styling */
+table {
+    width: 100%; /* Ensure the table spans the entire container */
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 16px; /* Increase font size for better readability */
+}
+
+th, td {
+    padding: 15px; /* Increase padding for a larger, more spaced-out table */
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f4f4f9;
+    color: #4a90e2;
+    font-weight: bold;
+}
+
+td {
+    overflow-wrap: break-word; /* Allow word wrapping for longer text */
+}
+
+/* Alternating Row Colors */
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    table {
+        font-size: 14px; /* Reduce font size for smaller screens */
+    }
+
+    th, td {
+        padding: 10px;
+    }
+}
+
+/* Button Styling */
+.button-group {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.button-group button {
+    padding: 12px 30px; /* Larger button */
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px; /* Match button font size with table */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.button-group button:hover {
+    background-color: #357ab7;
+    transform: scale(1.05);
+}
+
+.button-group button:active {
+    transform: scale(0.98);
+}
