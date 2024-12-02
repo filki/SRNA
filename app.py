@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
-
+from textblob import TextBlob
 app = Flask(__name__)
 
 # SQLite Database configuration
@@ -12,7 +12,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///steam_reviews.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Database model
+from textblob import TextBlob
+
 class SteamReview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     author_steamid = db.Column(db.String(100), nullable=False)
@@ -28,9 +29,11 @@ class SteamReview(db.Model):
     author_playtime_last_two_weeks = db.Column(db.Integer, nullable=True)
     author_playtime_at_review = db.Column(db.Integer, nullable=True)
     comments_count = db.Column(db.Integer, nullable=True)
+    sentiment_score = db.Column(db.Float, nullable=True)  # Add this field
 
     def __repr__(self):
         return f"<SteamReview {self.author_steamid}>"
+
 
 @app.route('/')
 def index():
@@ -54,18 +57,16 @@ def get_reviews():
 
 @app.route('/results')
 def results():
-    # Retrieve filter parameters from the request
-    voted_up = request.args.get('voted_up')  # Can be "True" or "False"
-    min_playtime = request.args.get('min_playtime', type=int)  # Convert to integer
-    max_playtime = request.args.get('max_playtime', type=int)  # Convert to integer
+    voted_up = request.args.get('voted_up')
+    min_playtime = request.args.get('min_playtime', type=int)
+    max_playtime = request.args.get('max_playtime', type=int)
+    min_sentiment = request.args.get('min_sentiment', type=float)  # New filter
+    max_sentiment = request.args.get('max_sentiment', type=float)  # New filter
 
-    # Start with the base query
     query = SteamReview.query
 
-    # Apply filters dynamically based on the parameters
     if voted_up is not None:
-        # Convert the string to a boolean
-        voted_up_bool = voted_up.lower() == 'true'
+        voted_up_bool = voted_up.lower() == "true"
         query = query.filter(SteamReview.voted_up == voted_up_bool)
 
     if min_playtime is not None:
@@ -74,10 +75,13 @@ def results():
     if max_playtime is not None:
         query = query.filter(SteamReview.playtime_forever <= max_playtime)
 
-    # Execute the query to get the results
-    reviews = query.all()
+    if min_sentiment is not None:
+        query = query.filter(SteamReview.sentiment_score >= min_sentiment)
 
-    # Pass the results to the template
+    if max_sentiment is not None:
+        query = query.filter(SteamReview.sentiment_score <= max_sentiment)
+
+    reviews = query.all()
     return render_template('results.html', reviews=reviews)
 
 
@@ -109,11 +113,13 @@ def save_reviews_to_db(reviews):
             'author_num_reviews': review['author'].get('num_reviews', 0),
             'author_playtime_last_two_weeks': review['author'].get('playtime_last_two_weeks', 0),
             'author_playtime_at_review': review['author'].get('playtime_at_review', 0),
-            'comments_count': review.get('comment_count', 0)
+            'comments_count': review.get('comment_count', 0),
+            'sentiment_score': round(TextBlob(review.get('review', '')).sentiment.polarity,2)  # Calculate sentiment
         }
         for review in reviews
     ])
     db.session.commit()
+
 
 @app.route('/delete_reviews', methods=['POST'])
 def delete_reviews():

@@ -29,6 +29,15 @@
                 <label for="max_playtime">Max Playtime:</label>
                 <input type="number" id="max_playtime" name="max_playtime" placeholder="Maximum Playtime">
             </div>
+            <div class="filter-row">
+                <label for="min_sentiment">Min Sentiment:</label>
+                <input type="number" step="0.1" id="min_sentiment" name="min_sentiment" placeholder="-1.0">
+            </div>
+            <div class="filter-row">
+                <label for="max_sentiment">Max Sentiment:</label>
+                <input type="number" step="0.1" id="max_sentiment" name="max_sentiment" placeholder="1.0">
+            </div>
+            
             <div class="button-group">
                 <button type="submit">Apply Filters</button>
                 <!-- Reset Filters Button -->
@@ -57,6 +66,7 @@
                     <th>Author Playtime (Last 2 Weeks)</th>
                     <th>Author Playtime at Review</th>
                     <th>Comments Count</th>
+                    <th>Sentiment Score</th>
                 </tr>
             </thead>
             <tbody>
@@ -76,6 +86,7 @@
                     <td>{{ review.author_playtime_last_two_weeks }}</td>
                     <td>{{ review.author_playtime_at_review }}</td>
                     <td>{{ review.comments_count }}</td>
+                    <td>{{ review.sentiment_score }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
