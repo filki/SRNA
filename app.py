@@ -129,6 +129,25 @@ def save_reviews_to_db(reviews, game_id):
     db.session.commit()
 
 
+@app.route('/search_game_title')
+def search_game_title():
+    title = request.args.get('title', '').strip()
+    if not title:
+        return []
+
+    # Fetch games using the Steam API
+    response = requests.get("https://api.steampowered.com/ISteamApps/GetAppList/v2/")
+    data = response.json()
+
+    # Filter games that match the title
+    games = [
+        {"name": game["name"], "app_id": game["appid"]}
+        for game in data["applist"]["apps"]
+        if title.lower() in game["name"].lower()
+    ]
+
+    return games[:10]  # Return top 10 results
+
 
 
 @app.route('/delete_reviews', methods=['POST'])
