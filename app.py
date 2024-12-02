@@ -54,8 +54,32 @@ def get_reviews():
 
 @app.route('/results')
 def results():
-    records = SteamReview.query.limit(10).all()  # Fetch only 10 records
-    return render_template('results.html', reviews=records)
+    # Retrieve filter parameters from the request
+    voted_up = request.args.get('voted_up')  # Can be "True" or "False"
+    min_playtime = request.args.get('min_playtime', type=int)  # Convert to integer
+    max_playtime = request.args.get('max_playtime', type=int)  # Convert to integer
+
+    # Start with the base query
+    query = SteamReview.query
+
+    # Apply filters dynamically based on the parameters
+    if voted_up is not None:
+        # Convert the string to a boolean
+        voted_up_bool = voted_up.lower() == 'true'
+        query = query.filter(SteamReview.voted_up == voted_up_bool)
+
+    if min_playtime is not None:
+        query = query.filter(SteamReview.playtime_forever >= min_playtime)
+
+    if max_playtime is not None:
+        query = query.filter(SteamReview.playtime_forever <= max_playtime)
+
+    # Execute the query to get the results
+    reviews = query.all()
+
+    # Pass the results to the template
+    return render_template('results.html', reviews=reviews)
+
 
 
 def fetch_reviews(app_id, review_type, total_reviews=50):
