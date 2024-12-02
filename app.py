@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for
 import requests
 from flask_sqlalchemy import SQLAlchemy
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
 
 app = Flask(__name__)
 
@@ -51,19 +54,8 @@ def get_reviews():
 
 @app.route('/results')
 def results():
-    voted_up = request.args.get('voted_up')  # e.g., "True" or "False"
-    min_playtime = request.args.get('min_playtime', type=int)
-    max_playtime = request.args.get('max_playtime', type=int)
-
-    query = SteamReview.query
-    if voted_up:
-        query = query.filter_by(voted_up=(voted_up == "True"))
-    if min_playtime and max_playtime:
-        query = query.filter(SteamReview.playtime_forever.between(min_playtime, max_playtime))
-
-    reviews = query.all()
-    return render_template('results.html', reviews=reviews)
-
+    records = SteamReview.query.limit(10).all()  # Fetch only 10 records
+    return render_template('results.html', reviews=records)
 
 
 def fetch_reviews(app_id, review_type, total_reviews=50):
@@ -104,6 +96,24 @@ def delete_reviews():
     db.session.query(SteamReview).delete()
     db.session.commit()
     return redirect(url_for('index'))
+
+@app.route('/visualization')
+def visualization():
+    # Example: Bar chart for positive vs. negative reviews
+    positive = SteamReview.query.filter_by(voted_up=True).count()
+    negative = SteamReview.query.filter_by(voted_up=False).count()
+
+    plt.bar(['Positive', 'Negative'], [positive, negative])
+    plt.title('Review Sentiments')
+    plt.ylabel('Count')
+
+    img = BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    plot_url = base64.b64encode(img.getvalue()).decode()
+
+    return render_template('visualization.html', plot_url=plot_url)
+
 
 if __name__ == "__main__":
     with app.app_context():
