@@ -53,6 +53,7 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Game ID</th> <!-- New column -->
                     <th>Author SteamID</th>
                     <th>Review</th>
                     <th>Voted Up</th>
@@ -73,6 +74,7 @@
                 {% for review in reviews %}
                 <tr>
                     <td>{{ review.id }}</td>
+                    <td>{{ review.game_id }}</td> <!-- New column -->
                     <td>{{ review.author_steamid }}</td>
                     <td>{{ review.review[:150] }}{% if review.review|length > 150 %}...{% endif %}</td>
                     <td>{{ 'Yes' if review.voted_up else 'No' }}</td>
@@ -90,6 +92,7 @@
                 </tr>
                 {% endfor %}
             </tbody>
+            
         </table>
 
         <!-- Back Button -->

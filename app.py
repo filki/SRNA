@@ -16,6 +16,7 @@ from textblob import TextBlob
 
 class SteamReview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    game_id = db.Column(db.Integer, nullable=False)  # Add this field
     author_steamid = db.Column(db.String(100), nullable=False)
     review = db.Column(db.Text, nullable=False)
     voted_up = db.Column(db.Boolean, nullable=False)
@@ -29,10 +30,11 @@ class SteamReview(db.Model):
     author_playtime_last_two_weeks = db.Column(db.Integer, nullable=True)
     author_playtime_at_review = db.Column(db.Integer, nullable=True)
     comments_count = db.Column(db.Integer, nullable=True)
-    sentiment_score = db.Column(db.Float, nullable=True)  # Add this field
+    sentiment_score = db.Column(db.Float, nullable=True)
 
     def __repr__(self):
-        return f"<SteamReview {self.author_steamid}>"
+        return f"<SteamReview {self.author_steamid} for Game {self.game_id}>"
+
 
 
 @app.route('/')
@@ -48,26 +50,30 @@ def get_reviews():
         # Fetch reviews from Steam
         reviews = fetch_reviews(app_id, review_type, total_reviews)
 
-        # Save reviews to database
-        save_reviews_to_db(reviews)
+        # Save reviews to database with the app_id as game_id
+        save_reviews_to_db(reviews, game_id=app_id)
 
         # Stay on index.html and show success message
         return render_template('index.html', success_message="Reviews have been successfully fetched and stored.")
     return render_template('index.html')
 
+
 @app.route('/results')
 def results():
+    game_id = request.args.get('game_id', type=int)  # New filter
     voted_up = request.args.get('voted_up')
     min_playtime = request.args.get('min_playtime', type=int)
     max_playtime = request.args.get('max_playtime', type=int)
-    min_sentiment = request.args.get('min_sentiment', type=float)  # New filter
-    max_sentiment = request.args.get('max_sentiment', type=float)  # New filter
+    min_sentiment = request.args.get('min_sentiment', type=float)
+    max_sentiment = request.args.get('max_sentiment', type=float)
 
     query = SteamReview.query
 
+    if game_id is not None:
+        query = query.filter(SteamReview.game_id == game_id)
+
     if voted_up is not None:
-        voted_up_bool = voted_up.lower() == "true"
-        query = query.filter(SteamReview.voted_up == voted_up_bool)
+        query = query.filter(SteamReview.voted_up == (voted_up.lower() == "true"))
 
     if min_playtime is not None:
         query = query.filter(SteamReview.playtime_forever >= min_playtime)
@@ -86,7 +92,8 @@ def results():
 
 
 
-def fetch_reviews(app_id, review_type, total_reviews=50):
+
+def fetch_reviews(app_id, review_type, total_reviews=200):
     url = f"https://store.steampowered.com/appreviews/{app_id}?json=1&num={total_reviews}&filter={review_type}&language=english"
     try:
         response = requests.get(url)
@@ -98,9 +105,10 @@ def fetch_reviews(app_id, review_type, total_reviews=50):
     except Exception as e:
         return [f"Error fetching reviews: {e}"]
 
-def save_reviews_to_db(reviews):
+def save_reviews_to_db(reviews, game_id):
     db.session.bulk_insert_mappings(SteamReview, [
         {
+            'game_id': game_id,  # Add game_id to each review
             'author_steamid': review['author'].get('steamid', 'Unknown'),
             'review': review.get('review', ''),
             'voted_up': review.get('voted_up', False),
@@ -114,11 +122,13 @@ def save_reviews_to_db(reviews):
             'author_playtime_last_two_weeks': review['author'].get('playtime_last_two_weeks', 0),
             'author_playtime_at_review': review['author'].get('playtime_at_review', 0),
             'comments_count': review.get('comment_count', 0),
-            'sentiment_score': round(TextBlob(review.get('review', '')).sentiment.polarity,2)  # Calculate sentiment
+            'sentiment_score': TextBlob(review.get('review', '')).sentiment.polarity
         }
         for review in reviews
     ])
     db.session.commit()
+
+
 
 
 @app.route('/delete_reviews', methods=['POST'])
