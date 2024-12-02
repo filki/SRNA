@@ -162,16 +162,52 @@ def visualization():
     positive = SteamReview.query.filter_by(voted_up=True).count()
     negative = SteamReview.query.filter_by(voted_up=False).count()
 
-    plt.bar(['Positive', 'Negative'], [positive, negative])
-    plt.title('Review Sentiments')
+    # Visualization 1: Positive vs Negative Reviews
+    plt.figure(figsize=(8, 6))
+    plt.bar(['Positive', 'Negative'], [positive, negative], color=['green', 'red'])
+    plt.title('Positive vs Negative Reviews')
+    plt.ylabel('Count')
+    plt.xlabel('Sentiment')
+
+    img1 = BytesIO()
+    plt.savefig(img1, format='png')
+    img1.seek(0)
+    plot_url1 = base64.b64encode(img1.getvalue()).decode()
+    plt.close()
+
+    # Visualization 2: Sentiment Score Distribution
+    sentiment_scores = [review.sentiment_score for review in SteamReview.query.all() if review.sentiment_score is not None]
+    plt.figure(figsize=(8, 6))
+    plt.hist(sentiment_scores, bins=20, color='blue', edgecolor='black')
+    plt.title('Sentiment Score Distribution')
+    plt.xlabel('Sentiment Score')
     plt.ylabel('Count')
 
-    img = BytesIO()
-    plt.savefig(img, format='png')
-    img.seek(0)
-    plot_url = base64.b64encode(img.getvalue()).decode()
+    img2 = BytesIO()
+    plt.savefig(img2, format='png')
+    img2.seek(0)
+    plot_url2 = base64.b64encode(img2.getvalue()).decode()
+    plt.close()
 
-    return render_template('visualization.html', plot_url=plot_url)
+    # Visualization 3: Average Sentiment Score per Game
+    game_sentiment = db.session.query(
+        SteamReview.game_id, db.func.avg(SteamReview.sentiment_score).label('avg_sentiment')
+    ).group_by(SteamReview.game_id).all()
+
+    game_ids, avg_sentiments = zip(*game_sentiment) if game_sentiment else ([], [])
+    plt.figure(figsize=(10, 6))
+    plt.bar([str(gid) for gid in game_ids], avg_sentiments, color='purple')
+    plt.title('Average Sentiment Score per Game')
+    plt.xlabel('Game ID')
+    plt.ylabel('Average Sentiment Score')
+
+    img3 = BytesIO()
+    plt.savefig(img3, format='png')
+    img3.seek(0)
+    plot_url3 = base64.b64encode(img3.getvalue()).decode()
+    plt.close()
+
+    return render_template('visualization.html', plot_urls=[plot_url1, plot_url2, plot_url3])
 
 
 if __name__ == "__main__":

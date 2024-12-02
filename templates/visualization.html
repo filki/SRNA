@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizations</title>
+</head>
+<body>
+    <h1>Data Visualizations</h1>
+
+    {% for plot_url in plot_urls %}
+        <div style="margin-bottom: 30px;">
+            <img src="data:image/png;base64,{{ plot_url }}" alt="Visualization" style="width: 80%; border: 1px solid #ccc;">
+        </div>
+    {% endfor %}
+
+    <div class="text-center mt-4">
+        <a href="/" class="btn btn-primary">Home Page</a>
+    </div>
+    
+</body>
+</html>
