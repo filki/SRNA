@@ -29,8 +29,15 @@
                 <label for="max_playtime">Max Playtime:</label>
                 <input type="number" id="max_playtime" name="max_playtime" placeholder="Maximum Playtime">
             </div>
-            <button type="submit">Apply Filters</button>
+            <div class="button-group">
+                <button type="submit">Apply Filters</button>
+                <!-- Reset Filters Button -->
+                <a href="{{ url_for('results') }}">
+                    <button type="button">Reset Filters</button>
+                </a>
+            </div>
         </form>
+        
 
         <!-- Results Table -->
         <table>
