@@ -4,4 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Steam Review Search System</title>
-    <link rel="stylesheet" href
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Steam Review Search System</h1>
+    </header>
+    <div class="container">
+        <p>Przeglądaj, analizuj i wizualizuj recenzje Steam.</p>
+        <div class="buttons">
+            <a href="/search" class="btn">Wyszukiwarka Recenzji</a>
+            <a href="/visualizations" class="btn">Wizualizacje Recenzji</a>
+            <a href="/analytics" class="btn">Analizy</a>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2024 Steam Review Search System</p>
+    </footer>
+</body>
+</html>
