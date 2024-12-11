@@ -48,3 +48,8 @@ footer {
     background-color: #333;
     color: white;
 }
+.center {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
