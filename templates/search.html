@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wyszukiwarka Recenzji</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='search.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Wyszukiwarka Recenzji</h1>
+    </header>
+    <!-- Dodany przycisk powrotu -->
+    <div class="center">
+        <a href="/" class="btn">Powrót do strony głównej</a>
+    </div>
+    
+    <div class="container">
+        <form method="POST" action="/search">
+            <label for="keyword">Słowo kluczowe:</label>
+            <input type="text" id="keyword" name="keyword" placeholder="Wpisz słowo kluczowe">
+            <button type="submit" class="btn">Szukaj</button>
+        </form>
+
+        <h2>Wyniki wyszukiwania:</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Autor</th>
+                    <th>Recenzja</th>
+                    <th>Rekomendacja</th>
+                    <th>Czas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for review in reviews %}
+                <tr>
+                    <td>{{ review['author_id'] }}</td>
+                    <td style="max-width: 400px; word-wrap: break-word;">{{ review['content'] }}</td>
+                    <td>{{ 'Polecane' if review['is_positive'] == 'Positive' else 'Niepolecane' }}</td>
+                    <td>{{ review['timestamp_created'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+</body>
+</html>
