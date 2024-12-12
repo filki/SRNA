@@ -17,16 +17,10 @@ def search():
 
     # Pobierz recenzje z uwzględnieniem limitu i offsetu
     offset = (page - 1) * 20
-    reviews = cached_get_reviews(keyword=keyword, limit=20, offset=offset)
-
-    # Filtruj recenzje
-    if filter_option == 'positive':
-        reviews = [review for review in reviews if review['is_positive'] == 'Positive']
-    elif filter_option == 'negative':
-        reviews = [review for review in reviews if review['is_positive'] == 'Negative']
+    reviews = cached_get_reviews(keyword=keyword, filter_option=filter_option, limit=20, offset=offset)
 
     # Oblicz liczbę stron
-    total_reviews = get_total_reviews_count(keyword)
+    total_reviews = get_total_reviews_count(keyword, filter_option)
     total_pages = (total_reviews + 19) // 20
 
     return render_template(

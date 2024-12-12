@@ -12,7 +12,7 @@
     </header>
     <div class="container">
         <!-- Formularz wyszukiwania -->
-        <form method="POST" action="/search">
+        <form method="GET" action="/search">
             <label for="keyword">Słowo kluczowe:</label>
             <input type="text" id="keyword" name="keyword" placeholder="Wpisz słowo kluczowe" value="{{ keyword }}">
 
@@ -36,6 +36,7 @@
                     <th>Recenzja</th>
                     <th>Rekomendacja</th>
                     <th>Czas</th>
+                    <th>Relewancja</th>
                 </tr>
             </thead>
             <tbody>
@@ -45,6 +46,7 @@
                     <td style="max-width: 400px; word-wrap: break-word;">{{ review['content'] }}</td>
                     <td>{{ 'Polecane' if review['is_positive'] == 'Positive' else 'Niepolecane' }}</td>
                     <td>{{ review['timestamp_created'] }}</td>
+                    <td>{{ review['relevance'] if review['relevance'] != 'NULL' else 'NULL' }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
