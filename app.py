@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, send_file
 from services.visualization_service import generate_top_authors_svg
 from services.db_service import cached_get_reviews
 from services.analysis_service import generate_wordcloud
+
 app = Flask(__name__)
 
 @app.route('/')

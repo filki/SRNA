@@ -1,7 +1,12 @@
 from functools import lru_cache
 import sqlite3
+from datetime import datetime
 
 DATABASE = 'data/steam_reviews_with_timestamp.db'
+
+def format_timestamp(unix_timestamp):
+    """Konwertuje znacznik czasu UNIX na czytelną datę."""
+    return datetime.utcfromtimestamp(unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
 @lru_cache(maxsize=32)
 def cached_get_reviews(keyword=None, limit=20):
@@ -27,4 +32,12 @@ def cached_get_reviews(keyword=None, limit=20):
     results = cur.fetchall()
     cur.close()
     con.close()
-    return [dict(row) for row in results]
+
+    # Konwertuj timestamp na czytelne daty
+    reviews = []
+    for row in results:
+        review = dict(row)
+        review['timestamp_created'] = format_timestamp(review['timestamp_created'])
+        reviews.append(review)
+
+    return tuple(reviews)  # Cache wymaga hashowalnych danych

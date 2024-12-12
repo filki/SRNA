@@ -10,19 +10,17 @@
     <header>
         <h1>Wyszukiwarka Recenzji</h1>
     </header>
-    <!-- Dodany przycisk powrotu -->
-    <div class="center">
-        <a href="/" class="btn">Powrót do strony głównej</a>
-    </div>
-    
     <div class="container">
+        <!-- Formularz wyszukiwania -->
         <form method="POST" action="/search">
             <label for="keyword">Słowo kluczowe:</label>
             <input type="text" id="keyword" name="keyword" placeholder="Wpisz słowo kluczowe">
             <button type="submit" class="btn">Szukaj</button>
         </form>
 
+        <!-- Tabela wyników wyszukiwania -->
         <h2>Wyniki wyszukiwania:</h2>
+        {% if reviews %}
         <table>
             <thead>
                 <tr>
@@ -43,7 +41,12 @@
                 {% endfor %}
             </tbody>
         </table>
+        {% else %}
+        <p>Brak wyników dla podanego słowa kluczowego.</p>
+        {% endif %}
 
+        <!-- Przycisk powrotu do strony głównej -->
+        <a href="/" class="btn">Powrót do strony głównej</a>
     </div>
 </body>
 </html>
