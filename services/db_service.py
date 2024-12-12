@@ -9,22 +9,18 @@ def format_timestamp(unix_timestamp):
     return datetime.utcfromtimestamp(unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
 @lru_cache(maxsize=32)
-def cached_get_reviews(keyword=None, limit=20):
+def cached_get_reviews(keyword=None, limit=20, offset=0):
     """
     Funkcja cache'ująca wyniki wyszukiwania w pamięci.
     """
-    query = "SELECT author_id, content, is_positive, timestamp_created FROM reviews LIMIT ?"
-    args = (limit,)
-    if keyword:
-        query = """
-            SELECT author_id, content, is_positive, timestamp_created 
-            FROM reviews 
-            WHERE content LIKE ? 
-            LIMIT ?
-        """
-        args = (f"%{keyword}%", limit)
+    query = """
+        SELECT author_id, content, is_positive, timestamp_created
+        FROM reviews
+        WHERE content LIKE ?
+        LIMIT ? OFFSET ?
+    """
+    args = (f"%{keyword}%", limit, offset)
 
-    # Wykonaj zapytanie do bazy danych
     con = sqlite3.connect(DATABASE)
     con.row_factory = sqlite3.Row
     cur = con.cursor()
@@ -41,3 +37,18 @@ def cached_get_reviews(keyword=None, limit=20):
         reviews.append(review)
 
     return tuple(reviews)  # Cache wymaga hashowalnych danych
+
+def get_total_reviews_count(keyword=None):
+    """
+    Zwraca całkowitą liczbę recenzji pasujących do słowa kluczowego.
+    """
+    query = "SELECT COUNT(*) FROM reviews WHERE content LIKE ?"
+    args = (f"%{keyword}%",)
+
+    con = sqlite3.connect(DATABASE)
+    cur = con.cursor()
+    cur.execute(query, args)
+    total_count = cur.fetchone()[0]
+    cur.close()
+    con.close()
+    return total_count

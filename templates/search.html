@@ -14,7 +14,7 @@
         <!-- Formularz wyszukiwania -->
         <form method="POST" action="/search">
             <label for="keyword">Słowo kluczowe:</label>
-            <input type="text" id="keyword" name="keyword" placeholder="Wpisz słowo kluczowe" value="{{ request.form.get('keyword', '') }}">
+            <input type="text" id="keyword" name="keyword" placeholder="Wpisz słowo kluczowe" value="{{ keyword }}">
 
             <label for="filter">Filtruj według rekomendacji:</label>
             <select id="filter" name="filter">
@@ -49,6 +49,17 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        <!-- Paginacja -->
+        <div class="pagination">
+            {% if current_page > 1 %}
+            <a href="/search?page={{ current_page - 1 }}&keyword={{ keyword }}&filter={{ selected_filter }}" class="btn">Poprzednia</a>
+            {% endif %}
+            <span>Strona {{ current_page }} z {{ total_pages }}</span>
+            {% if current_page < total_pages %}
+            <a href="/search?page={{ current_page + 1 }}&keyword={{ keyword }}&filter={{ selected_filter }}" class="btn">Następna</a>
+            {% endif %}
+        </div>
         {% else %}
         <p>Brak wyników dla podanego słowa kluczowego.</p>
         {% endif %}

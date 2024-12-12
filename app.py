@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, send_file
 from services.visualization_service import generate_top_authors_svg
-from services.db_service import cached_get_reviews
+from services.db_service import cached_get_reviews, get_total_reviews_count
 from services.analysis_service import generate_wordcloud
 
 app = Flask(__name__)
@@ -11,18 +11,32 @@ def index():
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
-    keyword = request.form.get('keyword') if request.method == 'POST' else None
-    filter_option = request.form.get('filter', 'all') if request.method == 'POST' else 'all'
+    keyword = request.args.get('keyword') or request.form.get('keyword', '')
+    filter_option = request.args.get('filter', 'all') or request.form.get('filter', 'all')
+    page = request.args.get('page', 1, type=int)
 
-    # Pobierz recenzje z uwzględnieniem filtra
-    reviews = cached_get_reviews(keyword=keyword)
+    # Pobierz recenzje z uwzględnieniem limitu i offsetu
+    offset = (page - 1) * 20
+    reviews = cached_get_reviews(keyword=keyword, limit=20, offset=offset)
+
+    # Filtruj recenzje
     if filter_option == 'positive':
         reviews = [review for review in reviews if review['is_positive'] == 'Positive']
     elif filter_option == 'negative':
         reviews = [review for review in reviews if review['is_positive'] == 'Negative']
 
+    # Oblicz liczbę stron
+    total_reviews = get_total_reviews_count(keyword)
+    total_pages = (total_reviews + 19) // 20
 
-    return render_template('search.html', reviews=reviews)
+    return render_template(
+        'search.html',
+        reviews=reviews,
+        current_page=page,
+        total_pages=total_pages,
+        selected_filter=filter_option,
+        keyword=keyword
+    )
 
 @app.route('/visualizations')
 def visualizations():
