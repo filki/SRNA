@@ -1,0 +1,4 @@
+# Ignorowanie folderów cache Python
+__pycache__/
+*.pyc
+
