@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wizualizacje</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='visualizations.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Top 10 Autorów według liczby recenzji</h1>
+    </header>
+    <div class="container">
+        <div class="chart">
+            {{ svg_chart|safe }}
+        </div>
+        <a href="/" class="btn">Powrót do strony głównej</a>
+    </div>
+</body>
+</html>
