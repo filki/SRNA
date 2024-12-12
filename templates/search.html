@@ -14,7 +14,15 @@
         <!-- Formularz wyszukiwania -->
         <form method="POST" action="/search">
             <label for="keyword">Słowo kluczowe:</label>
-            <input type="text" id="keyword" name="keyword" placeholder="Wpisz słowo kluczowe">
+            <input type="text" id="keyword" name="keyword" placeholder="Wpisz słowo kluczowe" value="{{ request.form.get('keyword', '') }}">
+
+            <label for="filter">Filtruj według rekomendacji:</label>
+            <select id="filter" name="filter">
+                <option value="all" {% if selected_filter == 'all' %}selected{% endif %}>Wszystkie</option>
+                <option value="positive" {% if selected_filter == 'positive' %}selected{% endif %}>Polecane</option>
+                <option value="negative" {% if selected_filter == 'negative' %}selected{% endif %}>Niepolecane</option>
+            </select>
+
             <button type="submit" class="btn">Szukaj</button>
         </form>
 

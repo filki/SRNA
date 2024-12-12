@@ -12,7 +12,16 @@ def index():
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     keyword = request.form.get('keyword') if request.method == 'POST' else None
+    filter_option = request.form.get('filter', 'all') if request.method == 'POST' else 'all'
+
+    # Pobierz recenzje z uwzględnieniem filtra
     reviews = cached_get_reviews(keyword=keyword)
+    if filter_option == 'positive':
+        reviews = [review for review in reviews if review['is_positive'] == 'Positive']
+    elif filter_option == 'negative':
+        reviews = [review for review in reviews if review['is_positive'] == 'Negative']
+
+
     return render_template('search.html', reviews=reviews)
 
 @app.route('/visualizations')
