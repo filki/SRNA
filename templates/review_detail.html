@@ -85,11 +85,11 @@
     <!-- Text Analysis Section -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0">Analiza Tekstu</h5>
+            <h5 class="mb-0">Text Analysis</h5>
         </div>
         <div class="card-body">
             <div class="text-analysis-grid">
-                {% for stat_name, stat_value in review.text_stats.items() %}
+                {% for stat_name, stat_value in review.text_stats.items() if stat_name not in ['morphological_analysis', 'summary_stats'] %}
                 <div class="stat-item">
                     <i class="fas {{ {
                         'word_count': 'fa-font',
@@ -97,18 +97,76 @@
                         'sentence_count': 'fa-paragraph',
                         'avg_sentence_length': 'fa-align-left',
                         'unique_words': 'fa-fingerprint',
-                        
+                        'special_chars_percent': 'fa-percentage',
+                        'caps_words_count': 'fa-font'
                     }[stat_name] }}"></i>
                     <div class="stat-content">
                         <span class="stat-label">{{ {
-                            'word_count': 'Liczba słów',
-                            'avg_word_length': 'Średnia długość słowa',
-                            'sentence_count': 'Liczba zdań',
-                            'avg_sentence_length': 'Średnia długość zdania',
-                            'unique_words': 'Unikalne słowa',
-                            
+                            'word_count': 'Word Count',
+                            'avg_word_length': 'Average Word Length',
+                            'sentence_count': 'Sentence Count',
+                            'avg_sentence_length': 'Average Sentence Length',
+                            'unique_words': 'Unique Words',
+                            'special_chars_percent': 'Special Characters %',
+                            'caps_words_count': 'Words in CAPS'
                         }[stat_name] }}</span>
-                        <span class="stat-value">{{ '%.1f'|format(stat_value) if stat_name in ['avg_word_length', 'avg_sentence_length', 'special_chars_ratio'] else stat_value }}</span>
+                        <span class="stat-value">{{ '%.1f'|format(stat_value) if stat_name in ['avg_word_length', 'avg_sentence_length', 'special_chars_percent'] else stat_value }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Morphological Analysis Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Morphological Analysis</h5>
+        </div>
+        <div class="card-body">
+            <!-- Summary Stats -->
+            <div class="summary-stats mb-4">
+                <h6 class="text-muted mb-3">Analysis Summary</h6>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="summary-label">Total Tokens:</span>
+                        <span class="summary-value">{{ review.text_stats.summary_stats.total_tokens }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Parts of Speech:</span>
+                        <div class="tag-cloud">
+                            {% for pos, count in review.text_stats.summary_stats.pos_counts.items() %}
+                            <span class="tag" title="{{ count }} tokens">{{ pos }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Token Analysis -->
+            <div class="morphological-analysis">
+                {% for token in review.text_stats.morphological_analysis %}
+                <div class="token-analysis">
+                    <div class="token-header">
+                        <span class="token-text">{{ token.text }}</span>
+                    </div>
+                    <div class="token-details">
+                        <div class="token-detail">
+                            <span class="detail-label">Base Form:</span>
+                            <span class="detail-value">{{ token.lemma }}</span>
+                        </div>
+                        <div class="token-detail">
+                            <span class="detail-label">Part of Speech:</span>
+                            <span class="detail-value">{{ token.pos }}</span>
+                        </div>
+                        <div class="token-detail">
+                            <span class="detail-label">Tag:</span>
+                            <span class="detail-value">{{ token.tag }}</span>
+                        </div>
+                        <div class="token-detail">
+                            <span class="detail-label">Dependency:</span>
+                            <span class="detail-value">{{ token.dep }}</span>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -284,6 +342,104 @@
     padding: 2px 6px;
     border-radius: 3px;
     font-size: 12px;
+}
+
+.morphological-analysis {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    padding: 0.5rem;
+}
+
+.token-analysis {
+    background: rgba(24, 37, 49, 0.95);
+    border: 1px solid rgba(103, 193, 245, 0.2);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.token-header {
+    background: rgba(103, 193, 245, 0.1);
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(103, 193, 245, 0.2);
+}
+
+.token-text {
+    font-size: 1.1em;
+    color: #66c0f4;
+    font-weight: bold;
+}
+
+.token-details {
+    padding: 0.75rem;
+}
+
+.token-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.token-detail:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: #8f98a0;
+    font-size: 0.9em;
+    margin-right: 1rem;
+}
+
+.detail-value {
+    color: #e9e9e9;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.summary-stats {
+    background: rgba(24, 37, 49, 0.95);
+    border: 1px solid rgba(103, 193, 245, 0.2);
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.summary-item {
+    padding: 0.5rem;
+}
+
+.summary-label {
+    display: block;
+    color: #8f98a0;
+    font-size: 0.9em;
+    margin-bottom: 0.5rem;
+}
+
+.summary-value {
+    color: #e9e9e9;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag-cloud .tag {
+    background: rgba(103, 193, 245, 0.1);
+    color: #67c1f5;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.9em;
 }
 
 .btn-steam {
