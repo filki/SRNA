@@ -9,7 +9,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from services.db_service import get_top_genres, get_top_publishers, get_top_developers
 
-DATABASE = 'data/steam_reviews_with_timestamp.db'
+DATABASE = 'data/steam_reviews_with_authors.db'
 
 def get_top_authors(limit=10):
     """Pobiera Top 10 autorów według liczby recenzji."""
