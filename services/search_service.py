@@ -1,133 +1,92 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-from typing import List, Dict, Any
-import re
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-import nltk
-
-# Download required NLTK data
-try:
-    nltk.data.find('tokenizers/punkt')
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('punkt')
-    nltk.download('stopwords')
+from typing import List, Dict, Any, Set
 
 class SearchService:
     def __init__(self):
-        # Configure vectorizer to better handle specific terms like "cs2"
-        self.vectorizer = TfidfVectorizer(
-            lowercase=True,
-            strip_accents='unicode',
-            stop_words='english',
-            token_pattern=r'(?u)\b\w+\b',  
-            min_df=1,
-            max_df=0.95,
-            ngram_range=(1, 3),  
+        """Initialize the search service with TF-IDF vectorizer"""
+        self.tfidf_vectorizer = TfidfVectorizer(
+            ngram_range=(1, 3),
             max_features=10000,
-            use_idf=True,
-            smooth_idf=True,
-            sublinear_tf=True  
+            sublinear_tf=True
         )
-        self.review_vectors = None
-        self.review_texts = None
 
     def preprocess_text(self, text: str) -> str:
-        """Clean and normalize text for better matching."""
-        if not isinstance(text, str) or not text.strip():
+        """Preprocess text for similarity calculation"""
+        if not text:
             return ""
+        # Convert to lowercase and normalize spaces
+        return " ".join(text.lower().split())
+
+    def calculate_jaccard_similarity(self, text1: str, text2: str) -> float:
+        """
+        Calculate Jaccard similarity between two texts.
+        Jaccard = (A ∩ B) / (A ∪ B) where A and B are sets of words
+        """
+        # Preprocess texts
+        text1 = self.preprocess_text(text1)
+        text2 = self.preprocess_text(text2)
         
-        # Convert to lowercase
-        text = text.lower()
+        # Convert to word sets
+        set1: Set[str] = set(text1.split())
+        set2: Set[str] = set(text2.split())
         
-        # Normalize spaces and remove extra whitespace
-        text = ' '.join(text.split())
+        # Calculate intersection and union
+        intersection = len(set1.intersection(set2))
+        union = len(set1.union(set2))
         
-        return text
-
-    def calculate_relevance_scores(self, query: str, reviews: List[Dict[str, Any]]) -> List[float]:
-        """Calculate relevance scores for reviews based on the query."""
-        if not query.strip() or not reviews:
-            return [0.0] * len(reviews)
-
-        try:
-            # Preprocess texts
-            review_texts = [self.preprocess_text(review.get('content', '')) for review in reviews]
-            processed_query = self.preprocess_text(query)
-
-            # Create document corpus with query at the end
-            all_texts = review_texts + [processed_query]
-
-            # Fit and transform all texts including query
-            tfidf_matrix = self.vectorizer.fit_transform(all_texts)
+        # Avoid division by zero
+        if union == 0:
+            return 0.0
             
-            # Get query vector (last document) and review vectors
-            query_vector = tfidf_matrix[-1]
-            review_vectors = tfidf_matrix[:-1]
+        return (intersection / union) * 100  # Convert to percentage
 
-            # Calculate cosine similarity
-            similarities = cosine_similarity(query_vector, review_vectors).flatten()
+    def calculate_tfidf_similarity(self, query: str, reviews: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Calculate TF-IDF based similarity scores"""
+        if not reviews:
+            return []
 
-            # Calculate context bonus based on term frequency
-            term_freq_bonus = np.zeros(len(reviews))
-            query_terms = set(processed_query.split())
+        # Prepare texts
+        review_texts = [self.preprocess_text(review['content']) for review in reviews]
+        query_text = self.preprocess_text(query)
+        
+        # Add query to the end of texts for vectorization
+        all_texts = review_texts + [query_text]
+        
+        # Calculate TF-IDF and cosine similarity
+        tfidf_matrix = self.tfidf_vectorizer.fit_transform(all_texts)
+        cosine_similarities = cosine_similarity(tfidf_matrix[:-1], tfidf_matrix[-1:])
+        
+        # Convert similarities to percentages
+        similarities = (cosine_similarities * 100).flatten()
+        
+        # Update review scores
+        for review, score in zip(reviews, similarities):
+            review['relevance'] = float(score)
             
-            for idx, text in enumerate(review_texts):
-                text_terms = set(text.split())
-                # Calculate term overlap ratio
-                overlap = len(query_terms & text_terms) / len(query_terms)
-                term_freq_bonus[idx] = overlap * 0.3  # 30% bonus for term frequency
+        return reviews
 
-            # Combine base similarity with term frequency bonus
-            combined_scores = similarities + term_freq_bonus
-
-            # Normalize to 0-100 scale
-            max_score = combined_scores.max()
-            if max_score > 0:
-                scores = (combined_scores / max_score) * 100
-            else:
-                scores = combined_scores * 0
-
-            # Apply logarithmic scaling to make differences more pronounced
-            scores = np.log1p(scores) * 20  # Scale factor to keep scores in reasonable range
-            
-            # Clip scores to 0-100 range and round
-            scores = np.clip(scores, 0, 100)
-            scores = [round(float(score), 2) for score in scores]
-
-            return scores
-
-        except Exception as e:
-            print(f"Error in calculate_relevance_scores: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            return [0.0] * len(reviews)
-
-    def search_reviews(self, query: str, reviews: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Search reviews and return them with relevance scores."""
-        if not query.strip():
+    def search_reviews(self, query: str, reviews: List[Dict[str, Any]], scoring_method: str = 'tfidf') -> List[Dict[str, Any]]:
+        """
+        Search and rank reviews based on selected scoring method.
+        scoring_method: 'tfidf' or 'jaccard'
+        """
+        if not reviews or not query:
             return reviews
 
-        try:
-            # Calculate relevance scores
-            scores = self.calculate_relevance_scores(query, reviews)
-
-            # Add scores to reviews
-            for review, score in zip(reviews, scores):
+        if scoring_method == 'jaccard':
+            # Calculate Jaccard similarity for each review
+            for review in reviews:
+                score = self.calculate_jaccard_similarity(query, review['content'])
                 review['relevance'] = score
+                review['scoring_method'] = 'jaccard'
+        else:  # default to tfidf
+            reviews = self.calculate_tfidf_similarity(query, reviews)
+            for review in reviews:
+                review['scoring_method'] = 'tfidf'
 
-            # Sort by relevancy score (highest first)
-            sorted_reviews = sorted(reviews, key=lambda x: x.get('relevance', 0.0), reverse=True)
+        # Sort by relevance score in descending order
+        return sorted(reviews, key=lambda x: x['relevance'], reverse=True)
 
-            return sorted_reviews
-
-        except Exception as e:
-            print(f"Error in search_reviews: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            return reviews
-
-# Create a singleton instance
 search_service = SearchService()

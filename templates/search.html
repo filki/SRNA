@@ -35,89 +35,114 @@
                                 <option value="negative" {% if selected_filter == 'negative' %}selected{% endif %}>Niepolecane</option>
                             </select>
                         </div>
+                        <div class="scoring-field">
+                            <i class="fas fa-chart-line"></i>
+                            <select id="scoring" name="scoring" title="Wybierz metodę obliczania trafności">
+                                {% for method in scoring_methods %}
+                                <option value="{{ method.id }}" 
+                                        {% if selected_scoring == method.id %}selected{% endif %}
+                                        title="{{ method.description }}">
+                                    {{ method.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
                         <button type="submit" class="search-button">
                             <i class="fas fa-search"></i>
                             Szukaj
                         </button>
                     </div>
                 </form>
-            </div>
 
-            {% if reviews %}
-            <div class="results-container">
-                <div class="results-header">
-                    <h2>Wyniki wyszukiwania</h2>
-                    <span class="results-count">Strona {{ current_page }} z {{ total_pages }}</span>
-                </div>
-
-                <div class="reviews-grid">
-                    {% for review in reviews %}
-                    <div class="review-card">
-                        <div class="review-header">
-                            <div class="author-info">
-                                <i class="fas fa-user"></i>
-                                <span>{{ review['author_id'][:8] }}...</span>
-                            </div>
-                            <span class="review-date">
-                                <i class="far fa-clock"></i>
-                                {{ review['timestamp_created'] }}
-                            </span>
-                        </div>
-                        <div class="review-content">
-                            <a href="{{ url_for('review_detail', review_id=review['id']) }}">
-                                {{ review['content'][:200] }}{% if review['content']|length > 200 %}...{% endif %}
-                            </a>
-                        </div>
-                        <div class="review-footer">
-                            <span class="recommendation {% if review['is_positive'] == 'Positive' %}positive{% else %}negative{% endif %}">
-                                <i class="fas {% if review['is_positive'] == 'Positive' %}fa-thumbs-up{% else %}fa-thumbs-down{% endif %}"></i>
-                                {{ 'Polecane' if review['is_positive'] == 'Positive' else 'Niepolecane' }}
-                            </span>
-                            {% if review['relevance'] != 'NULL' %}
-                            <span class="relevance">
-                                <i class="fas fa-chart-line"></i>
-                                {{ "%.2f"|format(review['relevance']|float) }}
-                            </span>
+                {% if reviews %}
+                <div class="results-container">
+                    <div class="results-header">
+                        <h2>Wyniki wyszukiwania</h2>
+                        <p class="results-info">
+                            Znaleziono {{ total_results }} wyników dla "{{ keyword }}"
+                            {% if selected_filter != 'all' %}
+                                (filtr: {{ "pozytywne" if selected_filter == 'positive' else "negatywne" }})
                             {% endif %}
+                            <br>
+                            <small class="text-muted">
+                                Metoda obliczania trafności: 
+                                {% for method in scoring_methods %}
+                                    {% if method.id == selected_scoring %}
+                                        {{ method.name }}
+                                    {% endif %}
+                                {% endfor %}
+                            </small>
+                        </p>
+                    </div>
+
+                    <div class="reviews-grid">
+                        {% for review in reviews %}
+                        <div class="review-card">
+                            <div class="review-header">
+                                <div class="author-info">
+                                    <i class="fas fa-user"></i>
+                                    <span>{{ review['author_id'][:8] }}...</span>
+                                </div>
+                                <span class="review-date">
+                                    <i class="far fa-clock"></i>
+                                    {{ review['timestamp_created'] }}
+                                </span>
+                            </div>
+                            <div class="review-content">
+                                <a href="{{ url_for('review_detail', review_id=review['id']) }}">
+                                    {{ review['content'][:200] }}{% if review['content']|length > 200 %}...{% endif %}
+                                </a>
+                            </div>
+                            <div class="review-footer">
+                                <span class="recommendation {% if review['is_positive'] == 'Positive' %}positive{% else %}negative{% endif %}">
+                                    <i class="fas {% if review['is_positive'] == 'Positive' %}fa-thumbs-up{% else %}fa-thumbs-down{% endif %}"></i>
+                                    {{ 'Polecane' if review['is_positive'] == 'Positive' else 'Niepolecane' }}
+                                </span>
+                                {% if review['relevance'] != 'NULL' %}
+                                <span class="relevance">
+                                    <i class="fas fa-chart-line"></i>
+                                    {{ "%.2f"|format(review['relevance']|float) }}
+                                </span>
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                <div class="pagination">
-                    {% if current_page > 1 %}
-                    <a href="/search?page={{ current_page - 1 }}&keyword={{ keyword }}&filter={{ selected_filter }}" 
-                       class="pagination-button">
-                        <i class="fas fa-chevron-left"></i> Poprzednia
-                    </a>
-                    {% endif %}
-                    
-                    <div class="page-info">
-                        <span>Strona {{ current_page }} z {{ total_pages }}</span>
+                        {% endfor %}
                     </div>
 
-                    {% if current_page < total_pages %}
-                    <a href="/search?page={{ current_page + 1 }}&keyword={{ keyword }}&filter={{ selected_filter }}" 
-                       class="pagination-button">
-                        Następna <i class="fas fa-chevron-right"></i>
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-            {% else %}
-            <div class="no-results">
-                <i class="fas fa-search"></i>
-                <p>Brak wyników dla podanego słowa kluczowego.</p>
-            </div>
-            {% endif %}
-        </main>
+                    <div class="pagination">
+                        {% if current_page > 1 %}
+                        <a href="/search?page={{ current_page - 1 }}&keyword={{ keyword }}&filter={{ selected_filter }}" 
+                           class="pagination-button">
+                            <i class="fas fa-chevron-left"></i> Poprzednia
+                        </a>
+                        {% endif %}
+                        
+                        <div class="page-info">
+                            <span>Strona {{ current_page }} z {{ total_pages }}</span>
+                        </div>
 
-        <footer class="app-footer">
-            <a href="/" class="home-button">
-                <i class="fas fa-home"></i>
-                Powrót do strony głównej
-            </a>
-        </footer>
-    </div>
-</body>
+                        {% if current_page < total_pages %}
+                        <a href="/search?page={{ current_page + 1 }}&keyword={{ keyword }}&filter={{ selected_filter }}" 
+                           class="pagination-button">
+                            Następna <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <p>Brak wyników dla podanego słowa kluczowego.</p>
+                </div>
+                {% endif %}
+            </main>
+
+            <footer class="app-footer">
+                <a href="/" class="home-button">
+                    <i class="fas fa-home"></i>
+                    Powrót do strony głównej
+                </a>
+            </footer>
+        </div>
+    </body>
 </html>

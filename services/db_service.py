@@ -9,17 +9,17 @@ def format_timestamp(unix_timestamp):
     """Konwertuje znacznik czasu UNIX na czytelną datę."""
     return datetime.utcfromtimestamp(unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
-def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", filter_option: str = "all") -> List[Dict[str, Any]]:
+def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", filter_option: str = "all", scoring_method: str = "tfidf") -> List[Dict[str, Any]]:
     """
     Pobiera recenzje z bazy danych z uwzględnieniem filtrów i wyszukiwania.
-    Teraz pobiera WSZYSTKIE pasujące recenzje, sortuje je globalnie,
+    Teraz pobiera WSZYSTKIE pasujące recenzje, sortuje je globalnie według wybranej metody,
     a następnie zwraca odpowiednią stronę.
     """
     # Calculate pagination bounds
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
     
-    print(f"\nDebug: Starting review fetch with keyword: '{keyword}', filter: {filter_option}")
+    print(f"\nDebug: Starting review fetch with keyword: '{keyword}', filter: {filter_option}, scoring: {scoring_method}")
     
     # Base query with all necessary fields - NO LIMIT/OFFSET
     query = """
@@ -66,8 +66,8 @@ def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", fil
 
         # If keyword provided, calculate relevancy scores and sort ALL reviews
         if keyword and all_reviews:
-            print(f"Debug: Calculating relevance scores for ALL reviews with keyword: '{keyword}'")
-            all_reviews = search_service.search_reviews(keyword, all_reviews)
+            print(f"Debug: Calculating relevance scores using {scoring_method} for keyword: '{keyword}'")
+            all_reviews = search_service.search_reviews(keyword, all_reviews, scoring_method)
             print(f"Debug: After global sorting, first review score: {all_reviews[0]['relevance'] if all_reviews else 0.0}")
         
         # Apply pagination to the globally sorted results

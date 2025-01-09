@@ -13,6 +13,7 @@ def index():
 def search():
     keyword = request.args.get('keyword', '')
     filter_option = request.args.get('filter', 'all')
+    scoring_method = request.args.get('scoring', 'tfidf')  # Default to TF-IDF
     page = request.args.get('page', 1, type=int)
     per_page = 20
 
@@ -28,8 +29,14 @@ def search():
         page=page,
         per_page=per_page,
         keyword=keyword,
-        filter_option=filter_option
+        filter_option=filter_option,
+        scoring_method=scoring_method
     )
+
+    scoring_methods = [
+        {'id': 'tfidf', 'name': 'TF-IDF', 'description': 'Zaawansowane wyszukiwanie uwzględniające częstość słów'},
+        {'id': 'jaccard', 'name': 'Jaccard', 'description': 'Proste porównanie na podstawie wspólnych słów'}
+    ]
 
     return render_template(
         'search.html',
@@ -38,7 +45,9 @@ def search():
         total_pages=total_pages,
         selected_filter=filter_option,
         keyword=keyword,
-        total_results=total_reviews
+        total_results=total_reviews,
+        scoring_methods=scoring_methods,
+        selected_scoring=scoring_method
     )
 
 @app.route('/visualizations')
