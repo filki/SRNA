@@ -9,10 +9,10 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
-@app.route('/search', methods=['GET', 'POST'])
+@app.route('/search', methods=['GET'])
 def search():
-    keyword = request.args.get('keyword') or request.form.get('keyword', '')
-    filter_option = request.args.get('filter', 'all') or request.form.get('filter', 'all')
+    keyword = request.args.get('keyword', '')
+    filter_option = request.args.get('filter', 'all')
     page = request.args.get('page', 1, type=int)
 
     # Pobierz recenzje z uwzględnieniem limitu i offsetu
