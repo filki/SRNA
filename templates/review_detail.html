@@ -158,6 +158,7 @@
 <div class="container mt-4">
     <!-- Review Header -->
     <div class="review-header mb-4">
+        <h2 class="game-title mb-3" style="color: #66c0f4;">{{ review.game_name }}</h2>
         <div class="d-flex justify-content-center">
             {% if review %}
                 <span class="review-sentiment {{ 'positive' if review.is_positive == 'Positive' else 'negative' }}">

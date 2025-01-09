@@ -98,6 +98,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
+                                <h4 class="game-title mb-2" style="color: #66c0f4;">{{ review.game_name }}</h4>
                                 <h5 class="card-title mb-1">
                                     <span class="review-sentiment {{ 'positive' if review.is_positive == 'Positive' else 'negative' }}">
                                         <i class="fas {{ 'fa-thumbs-up' if review.is_positive == 'Positive' else 'fa-thumbs-down' }} me-2"></i>

@@ -29,9 +29,11 @@ def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", fil
                a.num_reviews as total_reviews,
                a.playtime_forever,
                a.playtime_last_two_weeks,
-               a.playtime_at_review
+               a.playtime_at_review,
+               g.name as game_name
         FROM reviews r
         LEFT JOIN authors a ON r.author_id = a.author_id
+        LEFT JOIN games g ON r.app_id = g.app_id
         WHERE 1=1
     """
     params = []
@@ -142,9 +144,11 @@ def get_review_by_id(review_id: int) -> Dict[str, Any]:
                a.num_reviews as total_reviews,
                a.playtime_forever,
                a.playtime_last_two_weeks,
-               a.playtime_at_review
+               a.playtime_at_review,
+               g.name as game_name
         FROM reviews r
         LEFT JOIN authors a ON r.author_id = a.author_id
+        LEFT JOIN games g ON r.app_id = g.app_id
         WHERE r.id = ?
     """
     
