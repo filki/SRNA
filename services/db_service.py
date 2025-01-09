@@ -63,6 +63,25 @@ def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", fil
         for review in all_reviews:
             review['timestamp_created'] = format_timestamp(review['timestamp_created'])
             review['relevance'] = 0.0  # Default relevance score
+            
+            # Create author dictionary structure
+            review['author'] = {
+                'games_owned': review.get('games_owned', 0),
+                'total_reviews': review.get('total_reviews', 0),
+                'playtime_forever': review.get('playtime_forever', 0),
+                'playtime_last_two_weeks': review.get('playtime_last_two_weeks', 0),
+                'playtime_at_review': review.get('playtime_at_review', 0)
+            }
+            
+            # Convert boolean fields
+            def convert_text_to_bool(value):
+                if value is None:
+                    return False
+                return str(value).lower() in ('true', '1', 't', 'y', 'yes')
+                
+            review['steam_purchase'] = convert_text_to_bool(review.get('steam_purchase'))
+            review['received_for_free'] = convert_text_to_bool(review.get('received_for_free'))
+            review['written_during_early_access'] = convert_text_to_bool(review.get('written_during_early_access'))
 
         # If keyword provided, calculate relevancy scores and sort ALL reviews
         if keyword and all_reviews:

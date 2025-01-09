@@ -1,20 +1,156 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wizualizacje</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='visualizations.css') }}">
-</head>
-<body>
-    <header>
-        <h1>Top 10 Autorów według liczby recenzji</h1>
-    </header>
-    <div class="container">
-        <div class="chart">
-            {{ svg_chart|safe }}
-        </div>
-        <a href="/" class="btn">Powrót do strony głównej</a>
+{% extends "base.html" %}
+
+{% block title %}Wizualizacje - Steam Review Search System{% endblock %}
+
+{% block additional_styles %}
+.viz-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+.viz-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    background: linear-gradient(45deg, #66c0f4, #1999ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.viz-description {
+    color: #acb2b8;
+    font-size: 1.1rem;
+}
+.chart-container {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.chart-title {
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.chart-description {
+    color: #acb2b8;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    text-align: center;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="viz-header">
+        <h1 class="viz-title">Wizualizacje Danych</h1>
+        <p class="viz-description">Odkryj trendy i wzorce w recenzjach Steam</p>
     </div>
-</body>
-</html>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Rozkład Sentymentu
+                </h3>
+                {{ sentiment_chart | safe }}
+                <p class="chart-description">
+                    Procentowy rozkład recenzji pozytywnych i negatywnych w bazie danych
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <i class="fas fa-clock me-2"></i>
+                    Trend Czasowy
+                </h3>
+                {{ time_chart | safe }}
+                <p class="chart-description">
+                    Liczba recenzji w czasie z podziałem na sentyment
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-12 mb-4">
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <i class="fas fa-comments me-2"></i>
+                    Najczęściej Używane Słowa
+                </h3>
+                {{ wordcloud | safe }}
+                <p class="chart-description">
+                    Chmura słów pokazująca najczęściej występujące terminy w recenzjach
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <i class="fas fa-gamepad me-2"></i>
+                    Statystyki Graczy
+                </h3>
+                {{ playtime_chart | safe }}
+                <p class="chart-description">
+                    Rozkład czasu gry wśród recenzentów
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <i class="fas fa-thumbs-up me-2"></i>
+                    Użyteczność Recenzji
+                </h3>
+                {{ helpfulness_chart | safe }}
+                <p class="chart-description">
+                    Rozkład ocen użyteczności recenzji
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+    // Customize Plotly charts to match Steam theme
+    const steamTheme = {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: {
+            color: '#acb2b8'
+        },
+        title: {
+            font: {
+                color: '#ffffff'
+            }
+        },
+        xaxis: {
+            gridcolor: 'rgba(255,255,255,0.1)',
+            zerolinecolor: 'rgba(255,255,255,0.1)',
+            tickfont: {
+                color: '#acb2b8'
+            }
+        },
+        yaxis: {
+            gridcolor: 'rgba(255,255,255,0.1)',
+            zerolinecolor: 'rgba(255,255,255,0.1)',
+            tickfont: {
+                color: '#acb2b8'
+            }
+        }
+    };
+
+    // Apply theme to all Plotly charts
+    document.querySelectorAll('[id^="plotly"]').forEach(plot => {
+        Plotly.relayout(plot, steamTheme);
+    });
+</script>
+{% endblock %}
+{% endblock %}

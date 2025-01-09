@@ -1,201 +1,189 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Szczegóły Recenzji</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f0f2f5;
-        }
-        .header {
-            background-color: #1a73e8;
-            color: white;
-            padding: 15px 0;
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        .content {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin: 0 auto;
-            max-width: 800px;
-        }
-        .section-title {
-            font-size: 20px;
-            margin: 20px 0;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-            color: #1a73e8;
-        }
-        .info-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .info-list li {
-            margin-bottom: 12px;
-            color: #444;
-            display: flex;
-            align-items: baseline;
-        }
-        .info-list li .label {
-            min-width: 200px;
-            color: #666;
-            font-weight: 500;
-        }
-        .badge-polecane {
-            background-color: #34a853;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: normal;
-        }
-        .review-content {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 10px;
-            white-space: pre-wrap;
-            font-size: 1.1em;
-            line-height: 1.6;
-        }
-        .stats-box {
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-        .stats-value {
-            font-weight: bold;
-            color: #1a73e8;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        Szczegóły Recenzji
-    </div>
-    
-    <div class="content">
-        <div class="section">
-            <h3 class="section-title">🔍 Podstawowe informacje</h3>
-            <ul class="info-list">
-                <li>
-                    <span class="label">ID Recenzji:</span>
-                    {{ review.id }}
-                </li>
-                <li>
-                    <span class="label">ID Autora:</span>
-                    {{ review.author_id }}
-                </li>
-                <li>
-                    <span class="label">Data:</span>
-                    {{ review.timestamp_created }}
-                </li>
-                <li>
-                    <span class="label">Rekomendacja:</span>
-                    {% if review.is_positive == 'Positive' %}
-                    <span class="badge-polecane">Polecane</span>
-                    {% else %}
-                    <span class="badge bg-danger">Niepolecane</span>
-                    {% endif %}
-                </li>
-            </ul>
+{% extends "base.html" %}
+
+{% block title %}Szczegóły Recenzji - Steam Review Search System{% endblock %}
+
+{% block additional_styles %}
+.review-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+.review-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    background: linear-gradient(45deg, #66c0f4, #1999ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.review-sentiment {
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+.review-sentiment.positive {
+    background: rgba(102, 192, 244, 0.1);
+    color: #66c0f4;
+}
+.review-sentiment.negative {
+    background: rgba(255, 68, 68, 0.1);
+    color: #ff4444;
+}
+.review-metadata {
+    color: #acb2b8;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+}
+.review-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #e9e9e9;
+    white-space: pre-wrap;
+}
+.author-stats {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.stat-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(102, 192, 244, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    color: #66c0f4;
+}
+.stat-text {
+    flex-grow: 1;
+}
+.stat-label {
+    color: #acb2b8;
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem;
+}
+.stat-value {
+    color: #ffffff;
+    font-weight: 600;
+}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if review %}
+        <div class="review-header">
+            <span class="review-sentiment {{ 'positive' if review.is_positive == 'Positive' else 'negative' }}">
+                <i class="fas {{ 'fa-thumbs-up' if review.is_positive == 'Positive' else 'fa-thumbs-down' }} me-2"></i>
+                {{ 'Pozytywna' if review.is_positive == 'Positive' else 'Negatywna' }} Recenzja
+            </span>
+            <div class="review-metadata">
+                <i class="far fa-clock me-1"></i> {{ review.timestamp_created }}
+                {% if review.steam_purchase %}
+                    <span class="ms-3"><i class="fas fa-shopping-cart me-1"></i> Zakupiono na Steam</span>
+                {% endif %}
+                {% if review.received_for_free %}
+                    <span class="ms-3"><i class="fas fa-gift me-1"></i> Otrzymano za darmo</span>
+                {% endif %}
+                {% if review.written_during_early_access %}
+                    <span class="ms-3"><i class="fas fa-tools me-1"></i> Napisano podczas Early Access</span>
+                {% endif %}
+            </div>
         </div>
 
-        <div class="section">
-            <h3 class="section-title">📊 Statystyki recenzji</h3>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="stats-box">
-                        <ul class="info-list">
-                            <li>
-                                <span class="label">Głosy pozytywne:</span>
-                                <span class="stats-value">{{ review.votes_up }}</span>
-                            </li>
-                            <li>
-                                <span class="label">Głosy "zabawne":</span>
-                                <span class="stats-value">{{ review.votes_funny }}</span>
-                            </li>
-                            <li>
-                                <span class="label">Ocena ważona:</span>
-                                <span class="stats-value">{{ review.weighted_vote_score }}</span>
-                            </li>
-                        </ul>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Treść recenzji</h5>
+                        <p class="review-content">{{ review.content }}</p>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="stats-box">
-                        <ul class="info-list">
-                            <li>
-                                <span class="label">Liczba komentarzy:</span>
-                                <span class="stats-value">{{ review.comment_count }}</span>
-                            </li>
-                            <li>
-                                <span class="label">Zakupione na Steam:</span>
-                                <span class="stats-value">{{ 'Tak' if review.steam_purchase is sameas true else 'Nie' }}</span>
-                            </li>
-                            <li>
-                                <span class="label">Otrzymane za darmo:</span>
-                                <span class="stats-value">{{ 'Tak' if review.received_for_free is sameas true else 'Nie' }}</span>
-                            </li>
-                        </ul>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="author-stats">
+                    <h5 class="mb-4">Statystyki autora</h5>
+                    
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-gamepad"></i>
+                        </div>
+                        <div class="stat-text">
+                            <div class="stat-label">Posiadane gry</div>
+                            <div class="stat-value">{{ review.author.games_owned }}</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-pencil-alt"></i>
+                        </div>
+                        <div class="stat-text">
+                            <div class="stat-label">Liczba recenzji</div>
+                            <div class="stat-value">{{ review.author.total_reviews }}</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-text">
+                            <div class="stat-label">Całkowity czas gry</div>
+                            <div class="stat-value">{{ review.author.playtime_forever }} godz.</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <div class="stat-text">
+                            <div class="stat-label">Czas gry (ostatnie 2 tygodnie)</div>
+                            <div class="stat-value">{{ review.author.playtime_last_two_weeks }} godz.</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-stopwatch"></i>
+                        </div>
+                        <div class="stat-text">
+                            <div class="stat-label">Czas gry przy recenzji</div>
+                            <div class="stat-value">{{ review.author.playtime_at_review }} godz.</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="section">
-            <h3 class="section-title">👤 Informacje o autorze</h3>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="stats-box">
-                        <ul class="info-list">
-                            <li>
-                                <span class="label">Liczba gier:</span>
-                                <span class="stats-value">{{ review.author.games_owned if review.author.games_owned != 'N/A' else '0' }}</span>
-                            </li>
-                            <li>
-                                <span class="label">Liczba recenzji:</span>
-                                <span class="stats-value">{{ review.author.total_reviews if review.author.total_reviews != 'N/A' else '0' }}</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="stats-box">
-                        <ul class="info-list">
-                            <li>
-                                <span class="label">Całkowity czas gry:</span>
-                                <span class="stats-value">{{ (review.author.playtime_forever/60)|round(1) }} godz.</span>
-                            </li>
-                            <li>
-                                <span class="label">Czas gry (2 tyg.):</span>
-                                <span class="stats-value">{{ (review.author.playtime_last_two_weeks/60)|round(1) }} godz.</span>
-                            </li>
-                            <li>
-                                <span class="label">Czas podczas recenzji:</span>
-                                <span class="stats-value">{{ (review.author.playtime_at_review/60)|round(1) }} godz.</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+        <div class="text-center mt-4">
+            <a href="{{ url_for('search') }}" class="btn btn-steam">
+                <i class="fas fa-arrow-left me-2"></i>Powrót do wyszukiwania
+            </a>
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-exclamation-circle fa-3x mb-3" style="color: #ff4444;"></i>
+                <h3>Nie znaleziono recenzji</h3>
+                <p class="text-muted">Przepraszamy, ale nie mogliśmy znaleźć tej recenzji.</p>
+                <a href="{{ url_for('search') }}" class="btn btn-steam mt-3">
+                    <i class="fas fa-arrow-left me-2"></i>Powrót do wyszukiwania
+                </a>
             </div>
         </div>
-
-        <div class="section">
-            <h3 class="section-title">💬 Treść recenzji</h3>
-            <div class="review-content">{{ review.content }}</div>
-        </div>
-
-        <div style="text-align: center; margin-top: 30px;">
-            <a href="{{ url_for('search') }}" class="btn btn-primary">Powrót do wyszukiwania</a>
-        </div>
-    </div>
-</body>
-</html>
+    {% endif %}
+</div>
+{% endblock %}

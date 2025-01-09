@@ -4,22 +4,145 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Steam Review Search System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1b2838 0%, #171a21 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .hero-section {
+            padding: 100px 0;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #66c0f4;
+        }
+        .btn-steam {
+            background: #66c0f4;
+            color: #ffffff;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-steam:hover {
+            background: #1999ff;
+            transform: scale(1.05);
+        }
+        .title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #66c0f4, #1999ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            color: #acb2b8;
+            margin-bottom: 40px;
+        }
+        .features-section {
+            padding: 80px 0;
+        }
+        .footer {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px 0;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Steam Review Search System</h1>
-    </header>
-    <div class="container">
-        <p>Przeglądaj, analizuj i wizualizuj recenzje Steam.</p>
-        <div class="buttons">
-            <a href="/search" class="btn">Wyszukiwarka Recenzji</a>
-            <a href="/visualizations" class="btn">Wizualizacje Recenzji</a>
-            <a href="/analysis" class="btn">Analizy</a>
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="title">Steam Review Search System</h1>
+            <p class="subtitle">Przeglądaj, analizuj i wizualizuj recenzje Steam w intuicyjny sposób</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('search') }}" class="btn btn-steam">
+                    <i class="fas fa-search me-2"></i>Wyszukiwarka Recenzji
+                </a>
+                <a href="{{ url_for('visualizations') }}" class="btn btn-steam">
+                    <i class="fas fa-chart-bar me-2"></i>Wizualizacje
+                </a>
+                <a href="{{ url_for('analysis') }}" class="btn btn-steam">
+                    <i class="fas fa-microscope me-2"></i>Analiza
+                </a>
+            </div>
         </div>
     </div>
-    <footer>
-        <p>&copy; 2024 Steam Review Search System</p>
+
+    <div class="features-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon floating-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3>Inteligentne Wyszukiwanie</h3>
+                        <p>Zaawansowane algorytmy wyszukiwania pozwalają znaleźć dokładnie to, czego szukasz w recenzjach.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon floating-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h3>Wizualizacja Danych</h3>
+                        <p>Interaktywne wykresy i wizualizacje pomagają zrozumieć trendy i wzorce w recenzjach.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon floating-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3>Analiza Sentymentu</h3>
+                        <p>Zaawansowana analiza tekstu pomaga zrozumieć opinie i emocje zawarte w recenzjach.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer text-center">
+        <div class="container">
+            <p class="mb-0">&copy; {{ current_year }} Steam Review Search System</p>
+        </div>
     </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

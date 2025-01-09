@@ -5,6 +5,14 @@ from services.analysis_service import generate_wordcloud
 
 app = Flask(__name__)
 
+# Add built-in functions to Jinja2 context
+app.jinja_env.globals.update(
+    max=max,
+    min=min,
+    len=len,
+    range=range
+)
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -12,8 +20,8 @@ def index():
 @app.route('/search', methods=['GET'])
 def search():
     keyword = request.args.get('keyword', '')
-    filter_option = request.args.get('filter', 'all')
-    scoring_method = request.args.get('scoring', 'tfidf')  # Default to TF-IDF
+    filter_option = request.args.get('filter_option', 'all')
+    scoring_method = request.args.get('scoring_method', 'tfidf')  # Default to TF-IDF
     page = request.args.get('page', 1, type=int)
     per_page = 20
 
@@ -41,13 +49,13 @@ def search():
     return render_template(
         'search.html',
         reviews=reviews,
-        current_page=page,
+        page=page,
         total_pages=total_pages,
-        selected_filter=filter_option,
+        filter_option=filter_option,
         keyword=keyword,
         total_results=total_reviews,
         scoring_methods=scoring_methods,
-        selected_scoring=scoring_method
+        scoring_method=scoring_method
     )
 
 @app.route('/visualizations')
