@@ -43,7 +43,11 @@
                 {% for review in reviews %}
                 <tr>
                     <td>{{ review['author_id'] }}</td>
-                    <td style="max-width: 400px; word-wrap: break-word;">{{ review['content'] }}</td>
+                    <td style="max-width: 400px; word-wrap: break-word;">
+                        <a href="{{ url_for('review_detail', review_id=review['id']) }}" style="text-decoration: none; color: #337ab7;">
+                            {{ review['content'] }}
+                        </a>
+                    </td>
                     <td>{{ 'Polecane' if review['is_positive'] == 'Positive' else 'Niepolecane' }}</td>
                     <td>{{ review['timestamp_created'] }}</td>
                     <td>{{ review['relevance'] if review['relevance'] != 'NULL' else 'NULL' }}</td>
