@@ -16,7 +16,14 @@ def search():
     page = request.args.get('page', 1, type=int)
     per_page = 20
 
-    # Pobierz recenzje z uwzględnieniem wszystkich parametrów
+    # Get total count first
+    total_reviews = get_total_reviews_count(keyword, filter_option)
+    total_pages = (total_reviews + per_page - 1) // per_page
+
+    # Ensure page is within bounds
+    page = min(max(1, page), total_pages if total_pages > 0 else 1)
+
+    # Get globally sorted and paginated reviews
     reviews = cached_get_reviews(
         page=page,
         per_page=per_page,
@@ -24,17 +31,14 @@ def search():
         filter_option=filter_option
     )
 
-    # Oblicz liczbę stron
-    total_reviews = get_total_reviews_count(keyword, filter_option)
-    total_pages = (total_reviews + per_page - 1) // per_page
-
     return render_template(
         'search.html',
         reviews=reviews,
         current_page=page,
         total_pages=total_pages,
         selected_filter=filter_option,
-        keyword=keyword
+        keyword=keyword,
+        total_results=total_reviews
     )
 
 @app.route('/visualizations')

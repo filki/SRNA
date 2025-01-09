@@ -12,12 +12,16 @@ def format_timestamp(unix_timestamp):
 def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", filter_option: str = "all") -> List[Dict[str, Any]]:
     """
     Pobiera recenzje z bazy danych z uwzględnieniem filtrów i wyszukiwania.
+    Teraz pobiera WSZYSTKIE pasujące recenzje, sortuje je globalnie,
+    a następnie zwraca odpowiednią stronę.
     """
-    offset = (page - 1) * per_page
+    # Calculate pagination bounds
+    start_idx = (page - 1) * per_page
+    end_idx = start_idx + per_page
     
     print(f"\nDebug: Starting review fetch with keyword: '{keyword}', filter: {filter_option}")
     
-    # Base query with all necessary fields
+    # Base query with all necessary fields - NO LIMIT/OFFSET
     query = """
         SELECT r.*, 
                a.num_games_owned as games_owned,
@@ -41,10 +45,6 @@ def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", fil
     if keyword:
         query += " AND r.content LIKE ?"
         params.append(f"%{keyword}%")
-
-    # Add limit and offset
-    query += " LIMIT ? OFFSET ?"
-    params.extend([per_page * 3, offset])  # Fetch more reviews for better relevance calculation
     
     print(f"Debug: SQL Query: {query}")
     print(f"Debug: SQL Params: {params}")
@@ -54,27 +54,27 @@ def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", fil
     cur = con.cursor()
     
     try:
-        # Execute query
+        # Execute query to get ALL matching reviews
         cur.execute(query, params)
-        reviews = [dict(row) for row in cur.fetchall()]
-        print(f"Debug: Fetched {len(reviews)} reviews from database")
+        all_reviews = [dict(row) for row in cur.fetchall()]
+        print(f"Debug: Fetched {len(all_reviews)} total reviews from database")
         
-        # Format timestamps
-        for review in reviews:
+        # Format timestamps and initialize relevance scores
+        for review in all_reviews:
             review['timestamp_created'] = format_timestamp(review['timestamp_created'])
             review['relevance'] = 0.0  # Default relevance score
-            
-        print(f"Debug: Sample review content: '{reviews[0]['content'][:100]}...' if reviews else 'No reviews'")
 
-        # If keyword provided, calculate relevancy scores and sort
-        if keyword and reviews:
-            print(f"Debug: Calculating relevance scores for keyword: '{keyword}'")
-            reviews = search_service.search_reviews(keyword, reviews)
-            # Take only top per_page reviews after sorting by relevance
-            reviews = reviews[:per_page]
-            print(f"Debug: After relevance calculation, first review score: {reviews[0]['relevance'] if reviews else 0.0}")
+        # If keyword provided, calculate relevancy scores and sort ALL reviews
+        if keyword and all_reviews:
+            print(f"Debug: Calculating relevance scores for ALL reviews with keyword: '{keyword}'")
+            all_reviews = search_service.search_reviews(keyword, all_reviews)
+            print(f"Debug: After global sorting, first review score: {all_reviews[0]['relevance'] if all_reviews else 0.0}")
         
-        return reviews
+        # Apply pagination to the globally sorted results
+        paginated_reviews = all_reviews[start_idx:end_idx]
+        print(f"Debug: Returning page {page} ({len(paginated_reviews)} reviews)")
+        
+        return paginated_reviews
         
     except sqlite3.Error as e:
         print(f"Database error: {e}")
