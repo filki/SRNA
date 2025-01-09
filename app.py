@@ -81,15 +81,76 @@ def show_games():
     conn = sqlite3.connect('data/steamspy_data.db')
     cursor = conn.cursor()
 
-    # Query the games table
-    cursor.execute("SELECT * FROM games")
+    # Get filter values from request
+    name_filter = request.args.get('name', '')
+    owner_filter = request.args.get('owners', '')
+    developer_filter = request.args.get('developer', '')
+    publisher_filter = request.args.get('publisher', '')
+    language_filter = request.args.get('languages', '')
+    genre_filter = request.args.get('genre', '')
+
+    # Base query
+    query = "SELECT * FROM games WHERE 1=1"
+    params = []
+
+    # Add filters if they exist
+    if name_filter:
+        query += " AND name LIKE ?"
+        params.append(f"%{name_filter}%")
+    if owner_filter:
+        query += " AND owners = ?"
+        params.append(owner_filter)
+    if developer_filter:
+        query += " AND developer = ?"
+        params.append(developer_filter)
+    if publisher_filter:
+        query += " AND publisher = ?"
+        params.append(publisher_filter)
+    if language_filter:
+        query += " AND languages LIKE ?"
+        params.append(f"%{language_filter}%")
+    if genre_filter:
+        query += " AND genre = ?"
+        params.append(genre_filter)
+
+    # Get filtered games
+    cursor.execute(query, params)
     games = cursor.fetchall()
+
+    # Get unique values for dropdowns
+    cursor.execute("SELECT DISTINCT owners FROM games ORDER BY owners")
+    owners = [row[0] for row in cursor.fetchall()]
+
+    cursor.execute("SELECT DISTINCT developer FROM games ORDER BY developer")
+    developers = [row[0] for row in cursor.fetchall()]
+
+    cursor.execute("SELECT DISTINCT publisher FROM games ORDER BY publisher")
+    publishers = [row[0] for row in cursor.fetchall()]
+
+    cursor.execute("SELECT DISTINCT languages FROM games ORDER BY languages")
+    languages = [row[0] for row in cursor.fetchall()]
+
+    cursor.execute("SELECT DISTINCT genre FROM games ORDER BY genre")
+    genres = [row[0] for row in cursor.fetchall()]
 
     # Close the connection
     conn.close()
 
-    # Render the results in a template
-    return render_template('games.html', games=games)
+    return render_template('games.html', 
+                         games=games,
+                         owners=owners,
+                         developers=developers,
+                         publishers=publishers,
+                         languages=languages,
+                         genres=genres,
+                         filters={
+                             'name': name_filter,
+                             'owners': owner_filter,
+                             'developer': developer_filter,
+                             'publisher': publisher_filter,
+                             'languages': language_filter,
+                             'genre': genre_filter
+                         })
 
 @app.errorhandler(404)
 def page_not_found(e):
