@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, send_file, abort
 from services.visualization_service import generate_top_authors_svg
 from services.db_service import cached_get_reviews, get_total_reviews_count, get_review_by_id
-from services.analysis_service import generate_wordcloud
 
 app = Flask(__name__)
 
@@ -67,16 +66,6 @@ def visualizations():
 def clear_cache():
     cached_get_reviews.cache_clear()
     return "Cache został wyczyszczony!"
-
-@app.route('/analysis')
-def analysis():
-    return render_template('analysis.html')
-
-@app.route('/analysis/wordcloud')
-def wordcloud():
-    # Wygeneruj chmurę słów
-    img = generate_wordcloud()
-    return send_file(img, mimetype='image/png')
 
 @app.route('/review/<int:review_id>')
 def review_detail(review_id):

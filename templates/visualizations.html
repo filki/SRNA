@@ -75,16 +75,14 @@
             </div>
         </div>
 
-        <div class="col-md-12 mb-4">
-            <div class="chart-container">
-                <h3 class="chart-title">
-                    <i class="fas fa-comments me-2"></i>
-                    Najczęściej Używane Słowa
-                </h3>
-                {{ wordcloud | safe }}
-                <p class="chart-description">
-                    Chmura słów pokazująca najczęściej występujące terminy w recenzjach
-                </p>
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Top 10 Autorów według liczby recenzji</h5>
+                        {{ top_authors_svg | safe }}
+                    </div>
+                </div>
             </div>
         </div>
 
