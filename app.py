@@ -60,8 +60,8 @@ def search():
 
 @app.route('/visualizations')
 def visualizations():
-    svg_chart = generate_top_authors_svg()
-    return render_template('visualizations.html', svg_chart=svg_chart)
+    return render_template('visualizations.html')
+
 
 @app.route('/clear-cache')
 def clear_cache():
@@ -78,7 +78,7 @@ def review_detail(review_id):
 @app.route('/games')
 def show_games():
     # Connect to the database
-    conn = sqlite3.connect('data/steamspy_data.db')
+    conn = sqlite3.connect('data/steam_reviews_with_authors.db')
     cursor = conn.cursor()
 
     # Get filter values from request
