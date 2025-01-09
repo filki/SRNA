@@ -1,8 +1,7 @@
 from datetime import datetime
 import sqlite3
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from typing import List, Dict, Any
+from .search_service import search_service
 
 DATABASE = 'data/steam_reviews_with_authors.db'
 
@@ -10,57 +9,70 @@ def format_timestamp(unix_timestamp):
     """Konwertuje znacznik czasu UNIX na czytelną datę."""
     return datetime.utcfromtimestamp(unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
-def cached_get_reviews(page=1, per_page=10, keyword=None, filter_option='all'):
+def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", filter_option: str = "all") -> List[Dict[str, Any]]:
     """
-    Pobiera stronicowaną listę recenzji z bazy danych.
+    Pobiera recenzje z bazy danych z uwzględnieniem filtrów i wyszukiwania.
     """
     offset = (page - 1) * per_page
     
-    # Buduj zapytanie bazowe
+    print(f"\nDebug: Starting review fetch with keyword: '{keyword}', filter: {filter_option}")
+    
+    # Base query with all necessary fields
     query = """
-        SELECT r.*, a.num_games_owned as games_owned, a.num_reviews as total_reviews
+        SELECT r.*, 
+               a.num_games_owned as games_owned,
+               a.num_reviews as total_reviews,
+               a.playtime_forever,
+               a.playtime_last_two_weeks,
+               a.playtime_at_review
         FROM reviews r
         LEFT JOIN authors a ON r.author_id = a.author_id
         WHERE 1=1
     """
     params = []
-    
-    # Dodaj warunki wyszukiwania
+
+    # Add filter conditions
+    if filter_option == "positive":
+        query += " AND r.is_positive = 'Positive'"
+    elif filter_option == "negative":
+        query += " AND r.is_positive != 'Positive'"
+
+    # If keyword provided, use LIKE for initial filtering
     if keyword:
         query += " AND r.content LIKE ?"
         params.append(f"%{keyword}%")
+
+    # Add limit and offset
+    query += " LIMIT ? OFFSET ?"
+    params.extend([per_page * 3, offset])  # Fetch more reviews for better relevance calculation
     
-    if filter_option == 'positive':
-        query += " AND r.is_positive = 'Positive'"
-    elif filter_option == 'negative':
-        query += " AND r.is_positive = 'Negative'"
-    
-    # Dodaj sortowanie i limit
-    query += " ORDER BY r.timestamp_created DESC LIMIT ? OFFSET ?"
-    params.extend([per_page, offset])
+    print(f"Debug: SQL Query: {query}")
+    print(f"Debug: SQL Params: {params}")
     
     con = sqlite3.connect(DATABASE)
     con.row_factory = sqlite3.Row
     cur = con.cursor()
     
     try:
+        # Execute query
         cur.execute(query, params)
         reviews = [dict(row) for row in cur.fetchall()]
+        print(f"Debug: Fetched {len(reviews)} reviews from database")
         
-        # Formatuj daty i dodaj informacje o autorze
+        # Format timestamps
         for review in reviews:
             review['timestamp_created'] = format_timestamp(review['timestamp_created'])
-            review['author'] = {
-                'games_owned': review.get('games_owned', 0),
-                'total_reviews': review.get('total_reviews', 0)
-            }
+            review['relevance'] = 0.0  # Default relevance score
             
-            # Oblicz relewancję jeśli jest słowo kluczowe
-            if keyword:
-                relevance = calculate_relevance(keyword, [review])[0]
-                review['relevance'] = relevance if relevance is not None else 'NULL'
-            else:
-                review['relevance'] = 'NULL'
+        print(f"Debug: Sample review content: '{reviews[0]['content'][:100]}...' if reviews else 'No reviews'")
+
+        # If keyword provided, calculate relevancy scores and sort
+        if keyword and reviews:
+            print(f"Debug: Calculating relevance scores for keyword: '{keyword}'")
+            reviews = search_service.search_reviews(keyword, reviews)
+            # Take only top per_page reviews after sorting by relevance
+            reviews = reviews[:per_page]
+            print(f"Debug: After relevance calculation, first review score: {reviews[0]['relevance'] if reviews else 0.0}")
         
         return reviews
         
@@ -71,7 +83,7 @@ def cached_get_reviews(page=1, per_page=10, keyword=None, filter_option='all'):
         cur.close()
         con.close()
 
-def get_total_reviews_count(keyword=None, filter_option='all'):
+def get_total_reviews_count(keyword: str = "", filter_option: str = "all") -> int:
     """
     Zwraca całkowitą liczbę recenzji w bazie danych.
     """
@@ -82,10 +94,10 @@ def get_total_reviews_count(keyword=None, filter_option='all'):
         query += " AND content LIKE ?"
         params.append(f"%{keyword}%")
         
-    if filter_option == 'positive':
+    if filter_option == "positive":
         query += " AND is_positive = 'Positive'"
-    elif filter_option == 'negative':
-        query += " AND is_positive = 'Negative'"
+    elif filter_option == "negative":
+        query += " AND is_positive != 'Positive'"
     
     con = sqlite3.connect(DATABASE)
     cur = con.cursor()
@@ -100,7 +112,7 @@ def get_total_reviews_count(keyword=None, filter_option='all'):
         cur.close()
         con.close()
 
-def get_review_by_id(review_id):
+def get_review_by_id(review_id: int) -> Dict[str, Any]:
     """
     Pobiera szczegółowe informacje o recenzji na podstawie jej ID.
     """
@@ -157,25 +169,26 @@ def get_review_by_id(review_id):
         cur.close()
         con.close()
 
-def calculate_relevance(query_text, reviews, vectorizer=None):
+def calculate_relevance(query_text: str, reviews: List[Dict[str, Any]]) -> List[float]:
     """
     Oblicza relevance score dla każdej recenzji względem zapytania.
     """
     if not reviews or not query_text:
-        return np.zeros(len(reviews) if reviews else 0)
+        return [0.0] * len(reviews)
         
     # Przygotuj teksty do porównania
     review_texts = [review['content'] for review in reviews]
     
     # Użyj istniejącego vectorizera lub stwórz nowy
-    if vectorizer is None:
-        vectorizer = TfidfVectorizer(stop_words='english')
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    vectorizer = TfidfVectorizer(stop_words='english')
         
     try:
         # Przekształć teksty na wektory TF-IDF
         tfidf_matrix = vectorizer.fit_transform(review_texts + [query_text])
         
         # Oblicz podobieństwo cosinusowe między zapytaniem a każdą recenzją
+        from sklearn.metrics.pairwise import cosine_similarity
         query_vector = tfidf_matrix[-1]
         review_vectors = tfidf_matrix[:-1]
         
@@ -184,4 +197,4 @@ def calculate_relevance(query_text, reviews, vectorizer=None):
         
     except Exception as e:
         print(f"Error calculating relevance: {e}")
-        return np.zeros(len(reviews))
+        return [0.0] * len(reviews)
