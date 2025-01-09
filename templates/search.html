@@ -181,8 +181,13 @@
             </div>
             <div class="col-md-2">
                 <select class="form-select" name="scoring_method">
-                    <option value="tfidf" {% if request.args.get('scoring_method') == 'tfidf' %}selected{% endif %}>TF-IDF</option>
-                    <option value="jaccard" {% if request.args.get('scoring_method') == 'jaccard' %}selected{% endif %}>Jaccard</option>
+                    {% for method in scoring_methods %}
+                        <option value="{{ method.id }}" 
+                                {% if request.args.get('scoring_method') == method.id %}selected{% endif %}
+                                title="{{ method.description }}">
+                            {{ method.name }}
+                        </option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">

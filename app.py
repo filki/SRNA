@@ -70,6 +70,8 @@ def search():
     
     scoring_methods = [
         {'id': 'tfidf', 'name': 'TF-IDF', 'description': 'Zaawansowane wyszukiwanie uwzględniające częstość słów'},
+        {'id': 'cosine', 'name': 'Cosine', 'description': 'Podobieństwo cosinusowe między dokumentami'},
+        {'id': 'word2vec', 'name': 'Word2Vec', 'description': 'Wyszukiwanie semantyczne z wykorzystaniem embeddings'},
         {'id': 'jaccard', 'name': 'Jaccard', 'description': 'Proste porównanie na podstawie wspólnych słów'}
     ]
     
