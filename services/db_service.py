@@ -11,29 +11,82 @@ def format_timestamp(unix_timestamp):
     """Konwertuje znacznik czasu UNIX na czytelną datę."""
     return datetime.utcfromtimestamp(unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
-def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", filter_option: str = "all", 
-                      scoring_method: str = "tfidf", game_id: str = "", date_from: str = None, 
-                      date_to: str = None, min_playtime: int = None, min_funny: int = None,
-                      received_free: bool = None, early_access: bool = None) -> List[Dict[str, Any]]:
+def build_query_conditions(keyword: str = "", filter_option: str = "all", game_id: str = "", 
+                         date_from: str = None, date_to: str = None, min_playtime: int = None,
+                         min_funny: int = None, received_free: bool = None, 
+                         early_access: bool = None) -> tuple[str, list]:
     """
-    Pobiera recenzje z bazy danych z uwzględnieniem filtrów i wyszukiwania.
-    Teraz pobiera WSZYSTKIE pasujące recenzje, sortuje je globalnie według wybranej metody,
-    a następnie zwraca odpowiednią stronę.
+    Builds query conditions and parameters for filtering reviews.
+    Returns a tuple of (conditions_string, parameters_list)
     """
-    # Calculate pagination bounds
-    start_idx = (page - 1) * per_page
-    end_idx = start_idx + per_page
-    
     conditions = []
     params = []
+    
+    # Base conditions
+    if keyword:
+        conditions.append("r.content LIKE ?")
+        params.append(f"%{keyword}%")
 
-    # Base query with all necessary fields - NO LIMIT/OFFSET
-    query = """
+    if filter_option == "positive":
+        conditions.append("r.is_positive = 'Positive'")
+    elif filter_option == "negative":
+        conditions.append("r.is_positive = 'Negative'")
+
+    if game_id:
+        conditions.append("r.app_id = ?")
+        params.append(int(game_id))
+
+    # Date range conditions
+    if date_from:
+        conditions.append("r.timestamp_created >= strftime('%s', ?)")
+        params.append(date_from)
+    if date_to:
+        conditions.append("r.timestamp_created <= strftime('%s', ?)")
+        params.append(date_to)
+
+    # Playtime condition
+    if min_playtime is not None:
+        conditions.append("a.playtime_at_review >= ?")
+        params.append(min_playtime * 60)  # Convert hours to minutes
+
+    # Funny votes condition
+    if min_funny is not None:
+        conditions.append("r.votes_funny >= ?")
+        params.append(min_funny)
+
+    # Boolean filters
+    if received_free is not None:
+        conditions.append("r.received_for_free = ?")
+        params.append(str(received_free))
+    if early_access is not None:
+        conditions.append("r.written_during_early_access = ?")
+        params.append(str(early_access))
+
+    return " AND ".join(conditions) if conditions else "1=1", params
+
+def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", 
+                      filter_option: str = "all", scoring_method: str = "tfidf",
+                      game_id: str = "", date_from: str = None, date_to: str = None,
+                      min_playtime: int = None, min_funny: int = None,
+                      received_free: bool = None, early_access: bool = None) -> List[Dict[str, Any]]:
+    """
+    Pobiera recenzje z bazy danych z uwzględnieniem wszystkich filtrów jednocześnie.
+    """
+    start_idx = (page - 1) * per_page
+    end_idx = start_idx + per_page
+
+    # Build query conditions
+    conditions, params = build_query_conditions(
+        keyword, filter_option, game_id, date_from, date_to,
+        min_playtime, min_funny, received_free, early_access
+    )
+
+    # Base query with all necessary fields
+    query = f"""
         SELECT r.*, 
                a.num_games_owned as games_owned,
                a.num_reviews as total_reviews,
                a.playtime_forever,
-               a.playtime_last_two_weeks,
                a.playtime_at_review,
                g.name as game_name,
                g.developer as game_developer,
@@ -45,71 +98,22 @@ def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", fil
         FROM reviews r
         LEFT JOIN authors a ON r.author_id = a.author_id
         LEFT JOIN games g ON r.app_id = g.app_id
-        WHERE 1=1
+        WHERE {conditions}
     """
-    params = []
 
-    # Add filter conditions
-    if filter_option == "positive":
-        conditions.append("r.is_positive = 'Positive'")
-    elif filter_option == "negative":
-        conditions.append("r.is_positive != 'Positive'")
-
-    # Add game filter if provided
-    if game_id:
-        conditions.append("r.app_id = ?")
-        params.append(int(game_id))
-
-    # Add new filters
-    if date_from:
-        conditions.append("r.timestamp_created >= strftime('%s', ?)")
-        params.append(date_from)
-    
-    if date_to:
-        conditions.append("r.timestamp_created <= strftime('%s', ?)")
-        params.append(date_to)
-    
-    if min_playtime is not None:
-        conditions.append("a.playtime_at_review >= ?")
-        params.append(min_playtime * 60)  # Convert hours to minutes
-    
-    if min_funny is not None:
-        conditions.append("r.votes_funny >= ?")
-        params.append(min_funny)
-    
-    if received_free is not None:
-        conditions.append("r.received_for_free = ?")
-        params.append(str(received_free))
-    
-    if early_access is not None:
-        conditions.append("r.written_during_early_access = ?")
-        params.append(str(early_access))
-
-    # If keyword provided, use LIKE for initial filtering
-    if keyword:
-        conditions.append("r.content LIKE ?")
-        params.append(f"%{keyword}%")
-    
-    # Add conditions to query
-    if conditions:
-        query += " AND " + " AND ".join(conditions)
-    
-    print(f"\nDebug: Starting review fetch with keyword: '{keyword}', filter: {filter_option}, scoring: {scoring_method}, game_id: {game_id}")
-    print(f"Debug: SQL Query: {query}")
-    print(f"Debug: SQL Params: {params}")
+    print(f"\nDebug: Query conditions: {conditions}")
+    print(f"Debug: Query parameters: {params}")
     
     con = sqlite3.connect(DATABASE)
     con.row_factory = sqlite3.Row
     cur = con.cursor()
     
     try:
-        # Execute query to get ALL matching reviews
-        print(f"Executing query: {query}")
+        # Execute query
         cur.execute(query, params)
-        all_reviews = [dict(row) for row in cur.fetchall()]
-        print(f"Query returned {len(all_reviews)} results")
-        print(f"Debug: Fetched {len(all_reviews)} total reviews from database")
-        
+        columns = [col[0] for col in cur.description]
+        all_reviews = [dict(zip(columns, row)) for row in cur.fetchall()]
+
         # Format timestamps and initialize relevance scores
         for review in all_reviews:
             review['timestamp_created'] = format_timestamp(review['timestamp_created'])
@@ -154,77 +158,34 @@ def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", fil
         cur.close()
         con.close()
 
-def get_total_reviews_count(keyword: str = "", filter_option: str = "all", game_id: str = "", date_from: str = None, 
-                           date_to: str = None, min_playtime: int = None, min_funny: int = None,
-                           received_free: bool = None, early_access: bool = None) -> int:
+def get_total_reviews_count(keyword: str = "", filter_option: str = "all", 
+                          game_id: str = "", date_from: str = None, 
+                          date_to: str = None, min_playtime: int = None,
+                          min_funny: int = None, received_free: bool = None,
+                          early_access: bool = None) -> int:
     """
-    Zwraca całkowitą liczbę recenzji w bazie danych z uwzględnieniem wszystkich filtrów.
+    Zwraca całkowitą liczbę recenzji spełniających wszystkie warunki filtrowania.
     """
-    conditions = []
-    params = []
+    # Build query conditions
+    conditions, params = build_query_conditions(
+        keyword, filter_option, game_id, date_from, date_to,
+        min_playtime, min_funny, received_free, early_access
+    )
 
-    query = """
+    query = f"""
         SELECT COUNT(*)
         FROM reviews r
+        LEFT JOIN authors a ON r.author_id = a.author_id
         LEFT JOIN games g ON r.app_id = g.app_id
-        WHERE 1=1
+        WHERE {conditions}
     """
-    
-    if keyword:
-        conditions.append("r.content LIKE ?")
-        params.append(f"%{keyword}%")
-        
-    if filter_option == "positive":
-        conditions.append("r.is_positive = 'Positive'")
-    elif filter_option == "negative":
-        conditions.append("r.is_positive != 'Positive'")
-        
-    if game_id:
-        conditions.append("r.app_id = ?")
-        params.append(int(game_id))
-
-    # Add new filters
-    if date_from:
-        conditions.append("r.timestamp_created >= strftime('%s', ?)")
-        params.append(date_from)
-    
-    if date_to:
-        conditions.append("r.timestamp_created <= strftime('%s', ?)")
-        params.append(date_to)
-    
-    if min_playtime is not None:
-        conditions.append("a.playtime_at_review >= ?")
-        params.append(min_playtime * 60)  # Convert hours to minutes
-    
-    if min_funny is not None:
-        conditions.append("r.votes_funny >= ?")
-        params.append(min_funny)
-    
-    if received_free is not None:
-        conditions.append("r.received_for_free = ?")
-        params.append(str(received_free))
-    
-    if early_access is not None:
-        conditions.append("r.written_during_early_access = ?")
-        params.append(str(early_access))
-
-    # Add conditions to query
-    if conditions:
-        query += " AND " + " AND ".join(conditions)
     
     con = sqlite3.connect(DATABASE)
     cur = con.cursor()
     
     try:
-        print(f"Executing query: {query}")
         cur.execute(query, params)
-        result = cur.fetchone()
-        print(f"Query returned {result[0]} results")
-        return result[0]
-    except sqlite3.Error as e:
-        print(f"Database error: {e}")
-        traceback.print_exc()
-        return 0
+        return cur.fetchone()[0]
     finally:
         cur.close()
         con.close()

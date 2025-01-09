@@ -141,57 +141,59 @@
                     <span class="input-group-text bg-dark border-dark text-light">
                         <i class="fas fa-search"></i>
                     </span>
-                    <input type="text" class="form-control" name="keyword" placeholder="Wpisz słowo kluczowe..." value="{{ keyword if keyword }}">
+                    <input type="text" class="form-control" name="keyword" placeholder="Wpisz słowo kluczowe..." value="{{ request.args.get('keyword', '') }}">
                 </div>
             </div>
             <div class="col-md-2">
                 <select class="form-select" name="filter_option">
-                    <option value="all" {% if filter_option == 'all' %}selected{% endif %}>Wszystkie recenzje</option>
-                    <option value="positive" {% if filter_option == 'positive' %}selected{% endif %}>Tylko pozytywne</option>
-                    <option value="negative" {% if filter_option == 'negative' %}selected{% endif %}>Tylko negatywne</option>
+                    <option value="all" {% if request.args.get('filter_option') == 'all' %}selected{% endif %}>Wszystkie recenzje</option>
+                    <option value="positive" {% if request.args.get('filter_option') == 'positive' %}selected{% endif %}>Tylko pozytywne</option>
+                    <option value="negative" {% if request.args.get('filter_option') == 'negative' %}selected{% endif %}>Tylko negatywne</option>
                 </select>
             </div>
             <div class="col-md-3">
                 <label class="form-label">Data od:</label>
-                <input type="date" class="form-control" name="date_from" value="{{ date_from if date_from }}">
+                <input type="date" class="form-control" name="date_from" value="{{ request.args.get('date_from', '') }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Data do:</label>
-                <input type="date" class="form-control" name="date_to" value="{{ date_to if date_to }}">
+                <input type="date" class="form-control" name="date_to" value="{{ request.args.get('date_to', '') }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Min. czas gry (godz.):</label>
-                <input type="number" class="form-control" name="min_playtime" min="0" value="{{ min_playtime if min_playtime }}">
+                <input type="number" class="form-control" name="min_playtime" min="0" value="{{ request.args.get('min_playtime', '') }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Min. głosów śmiesznych:</label>
-                <input type="number" class="form-control" name="min_funny" min="0" value="{{ min_funny if min_funny }}">
+                <input type="number" class="form-control" name="min_funny" min="0" value="{{ request.args.get('min_funny', '') }}">
             </div>
             <div class="col-md-12">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" name="received_free" value="true" {% if received_free %}checked{% endif %}>
-                    <label class="form-check-label">Otrzymane za darmo</label>
+                    <input class="form-check-input" type="checkbox" id="received_free" name="received_free" value="true" 
+                           {% if request.args.get('received_free') == 'true' %}checked{% endif %}>
+                    <label class="form-check-label" for="received_free">Otrzymane za darmo</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" name="early_access" value="true" {% if early_access %}checked{% endif %}>
-                    <label class="form-check-label">Early Access</label>
+                    <input class="form-check-input" type="checkbox" id="early_access" name="early_access" value="true"
+                           {% if request.args.get('early_access') == 'true' %}checked{% endif %}>
+                    <label class="form-check-label" for="early_access">Early Access</label>
                 </div>
             </div>
             <div class="col-md-2">
                 <select class="form-select" name="scoring_method">
-                    <option value="tfidf" {% if scoring_method == 'tfidf' %}selected{% endif %}>TF-IDF</option>
-                    <option value="jaccard" {% if scoring_method == 'jaccard' %}selected{% endif %}>Jaccard</option>
+                    <option value="tfidf" {% if request.args.get('scoring_method') == 'tfidf' %}selected{% endif %}>TF-IDF</option>
+                    <option value="jaccard" {% if request.args.get('scoring_method') == 'jaccard' %}selected{% endif %}>Jaccard</option>
                 </select>
             </div>
             <div class="col-md-2">
                 <div class="game-select-container">
-                    <input type="hidden" name="game_id" id="selected_game_id" value="{{ selected_game }}">
+                    <input type="hidden" name="game_id" id="selected_game_id" value="{{ request.args.get('game_id', '') }}">
                     <input type="text" 
                            class="game-select-input" 
                            id="game_search" 
                            placeholder="Wybierz grę..."
                            autocomplete="off"
-                           value="{{ games_list | selectattr('app_id', 'equalto', selected_game) | map(attribute='name') | first | default('') }}">
+                           value="{{ games_list | selectattr('app_id', 'equalto', request.args.get('game_id', '')) | map(attribute='name') | first | default('') }}">
                     <div class="game-select-dropdown" id="games_dropdown">
                         {% for game in games_list %}
                             <div class="game-option" data-game-id="{{ game.app_id }}" data-game-name="{{ game.name }}">
@@ -201,23 +203,26 @@
                     </div>
                 </div>
             </div>
-            <div class="col-12 text-center">
+            <div class="col-12 text-center mt-4">
                 <button type="submit" class="btn btn-steam">
-                    <i class="fas fa-search me-2"></i>Szukaj
+                    <i class="fas fa-search me-2"></i> Szukaj
                 </button>
+                <a href="{{ url_for('search') }}" class="btn btn-secondary ms-2">
+                    <i class="fas fa-undo me-2"></i> Resetuj filtry
+                </a>
             </div>
         </form>
     </div>
 
     {% if reviews %}
-        {% if selected_game %}
+        {% if request.args.get('game_id') %}
             {% set first_review = reviews[0] if reviews else None %}
             <div class="selected-game-info mb-4">
                 <div class="game-header text-center mb-3">
                     <h4>
                         <i class="fas fa-gamepad me-2"></i>
                         <span style="color: #66c0f4;">{{ first_review.game_name }}</span>
-                        <a href="{{ url_for('search', keyword=keyword, filter_option=filter_option, scoring_method=scoring_method) }}" 
+                        <a href="{{ url_for('search', keyword=request.args.get('keyword', ''), filter_option=request.args.get('filter_option', ''), scoring_method=request.args.get('scoring_method', '')) }}" 
                            class="btn btn-sm btn-outline-danger ms-3" 
                            title="Usuń filtr gry">
                             <i class="fas fa-times"></i>
@@ -329,7 +334,7 @@
                 <ul class="pagination justify-content-center">
                     {% if page > 1 %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('search', page=page-1, keyword=keyword, filter_option=filter_option, scoring_method=scoring_method, game_id=selected_game) }}">
+                            <a class="page-link" href="{{ url_for('search', page=page-1, keyword=request.args.get('keyword', ''), filter_option=request.args.get('filter_option', ''), scoring_method=request.args.get('scoring_method', ''), game_id=request.args.get('game_id', '')) }}">
                                 <i class="fas fa-chevron-left"></i>
                             </a>
                         </li>
@@ -337,13 +342,13 @@
                     
                     {% for p in range(max(1, page-2), min(total_pages+1, page+3)) %}
                         <li class="page-item {{ 'active' if p == page else '' }}">
-                            <a class="page-link" href="{{ url_for('search', page=p, keyword=keyword, filter_option=filter_option, scoring_method=scoring_method, game_id=selected_game) }}">{{ p }}</a>
+                            <a class="page-link" href="{{ url_for('search', page=p, keyword=request.args.get('keyword', ''), filter_option=request.args.get('filter_option', ''), scoring_method=request.args.get('scoring_method', ''), game_id=request.args.get('game_id', '')) }}">{{ p }}</a>
                         </li>
                     {% endfor %}
                     
                     {% if page < total_pages %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('search', page=page+1, keyword=keyword, filter_option=filter_option, scoring_method=scoring_method, game_id=selected_game) }}">
+                            <a class="page-link" href="{{ url_for('search', page=page+1, keyword=request.args.get('keyword', ''), filter_option=request.args.get('filter_option', ''), scoring_method=request.args.get('scoring_method', ''), game_id=request.args.get('game_id', '')) }}">
                                 <i class="fas fa-chevron-right"></i>
                             </a>
                         </li>
