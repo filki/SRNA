@@ -2,6 +2,7 @@ from datetime import datetime
 import sqlite3
 from typing import List, Dict, Any
 from .search_service import search_service
+from .text_analysis_service import text_analysis_service
 
 DATABASE = 'data/steam_reviews_with_authors.db'
 
@@ -161,7 +162,10 @@ def get_review_by_id(review_id: int) -> Dict[str, Any]:
         review = dict(result)
         review['timestamp_created'] = format_timestamp(review['timestamp_created'])
         
-        # Konwertuj pola boolean (zapisane jako tekst 'true'/'false' lub '1'/'0')
+        # Add text analysis
+        review['text_stats'] = text_analysis_service.analyze_text(review['content'])
+        
+        # Convert boolean fields
         def convert_text_to_bool(value):
             if value is None:
                 return False

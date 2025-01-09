@@ -77,41 +77,114 @@
     color: #ffffff;
     font-weight: 600;
 }
+.text-analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(66, 153, 225, 0.1);
+    border-radius: 8px;
+    margin-right: 1rem;
+    color: #4299e1;
+}
+
+.stat-text {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #a0aec0;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.content-box {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.review-title {
+    color: #e2e8f0;
+    font-size: 1.25rem;
+}
+
+.review-text {
+    color: #a0aec0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.light-blue-text {
+    color: #00bfff; /* Change to a brighter light blue */
+    background-color: rgba(255, 255, 255, 0.1); /* Optional: semi-transparent background */
+    padding: 5px; /* Optional: add some padding */
+    border-radius: 4px; /* Optional: rounded corners */
+}
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    {% if review %}
-        <div class="review-header">
-            <span class="review-sentiment {{ 'positive' if review.is_positive == 'Positive' else 'negative' }}">
-                <i class="fas {{ 'fa-thumbs-up' if review.is_positive == 'Positive' else 'fa-thumbs-down' }} me-2"></i>
-                {{ 'Pozytywna' if review.is_positive == 'Positive' else 'Negatywna' }} Recenzja
-            </span>
-            <div class="review-metadata">
-                <i class="far fa-clock me-1"></i> {{ review.timestamp_created }}
-                {% if review.steam_purchase %}
-                    <span class="ms-3"><i class="fas fa-shopping-cart me-1"></i> Zakupiono na Steam</span>
-                {% endif %}
-                {% if review.received_for_free %}
-                    <span class="ms-3"><i class="fas fa-gift me-1"></i> Otrzymano za darmo</span>
-                {% endif %}
-                {% if review.written_during_early_access %}
-                    <span class="ms-3"><i class="fas fa-tools me-1"></i> Napisano podczas Early Access</span>
-                {% endif %}
-            </div>
+<div class="container mt-4">
+    <!-- Review Header -->
+    <div class="review-header mb-4">
+        <div class="d-flex justify-content-center">
+            {% if review %}
+                <span class="review-sentiment {{ 'positive' if review.is_positive == 'Positive' else 'negative' }}">
+                    <i class="fas {{ 'fa-thumbs-up' if review.is_positive == 'Positive' else 'fa-thumbs-down' }} me-2"></i>
+                    {{ 'Pozytywna' if review.is_positive == 'Positive' else 'Negatywna' }} Recenzja
+                </span>
+            {% endif %}
         </div>
+        <div class="d-flex justify-content-center gap-3">
+            {% if review %}
+                <span class="light-blue-text">
+                    <i class="far fa-clock"></i> {{ review.timestamp_created }}
+                </span>
+                {% if review.steam_purchase %}
+                <span class="light-blue-text">
+                    <i class="fas fa-shopping-cart"></i> Zakupiono na Steam
+                </span>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
 
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Treść recenzji</h5>
-                        <p class="review-content">{{ review.content }}</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Author Stats Sidebar -->
+        <div class="col-md-4">
+            {% if review %}
                 <div class="author-stats">
                     <h5 class="mb-4">Statystyki autora</h5>
                     
@@ -165,25 +238,122 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            {% endif %}
         </div>
 
-        <div class="text-center mt-4">
-            <a href="{{ url_for('search') }}" class="btn btn-steam">
+        <!-- Review Content -->
+        <div class="col-md-8">
+            {% if review %}
+                <div class="review-content">
+                    <div class="content-box p-4">
+                        <h4 class="review-title mb-4">Treść recenzji:</h4>
+                        <p class="review-text">{{ review.content }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Text Analysis Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="text-center mb-4">Analiza tekstu</h4>
+        </div>
+        <div class="col-md-12">
+            {% if review %}
+                <div class="text-analysis-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-font"></i>
+                        </div>
+                        <div class="stat-text">
+                            <div class="stat-label">Liczba słów</div>
+                            <div class="stat-value">{{ review.text_stats.word_count }}</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-text-width"></i>
+                        </div>
+                        <div class="stat-text">
+                            <div class="stat-label">Średnia długość słowa</div>
+                            <div class="stat-value">{{ review.text_stats.avg_word_length }} znaków</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-paragraph"></i>
+                        </div>
+                        <div class="stat-text">
+                            <div class="stat-label">Liczba zdań</div>
+                            <div class="stat-value">{{ review.text_stats.sentence_count }}</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-align-left"></i>
+                        </div>
+                        <div class="stat-text">
+                            <div class="stat-label">Średnia długość zdania</div>
+                            <div class="stat-value">{{ review.text_stats.avg_sentence_length }} słów</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-fingerprint"></i>
+                        </div>
+                        <div class="stat-text">
+                            <div class="stat-label">Unikalne słowa</div>
+                            <div class="stat-value">{{ review.text_stats.unique_words }}</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-text">
+                            <div class="stat-label">Znaki specjalne</div>
+                            <div class="stat-value">{{ review.text_stats.special_chars_percent }}%</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-volume-up"></i>
+                        </div>
+                        <div class="stat-text">
+                            <div class="stat-label">Słowa pisane CAPS LOCK</div>
+                            <div class="stat-value">{{ review.text_stats.caps_words_count }}</div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center mt-5">
+        <a href="{{ url_for('search') }}" class="btn btn-primary">
+            <i class="fas fa-arrow-left me-2"></i>POWRÓT DO WYSZUKIWANIA
+        </a>
+    </div>
+</div>
+
+{% if not review %}
+    <div class="card">
+        <div class="card-body text-center">
+            <i class="fas fa-exclamation-circle fa-3x mb-3" style="color: #ff4444;"></i>
+            <h3>Nie znaleziono recenzji</h3>
+            <p class="text-muted">Przepraszamy, ale nie mogliśmy znaleźć tej recenzji.</p>
+            <a href="{{ url_for('search') }}" class="btn btn-steam mt-3">
                 <i class="fas fa-arrow-left me-2"></i>Powrót do wyszukiwania
             </a>
         </div>
-    {% else %}
-        <div class="card">
-            <div class="card-body text-center">
-                <i class="fas fa-exclamation-circle fa-3x mb-3" style="color: #ff4444;"></i>
-                <h3>Nie znaleziono recenzji</h3>
-                <p class="text-muted">Przepraszamy, ale nie mogliśmy znaleźć tej recenzji.</p>
-                <a href="{{ url_for('search') }}" class="btn btn-steam mt-3">
-                    <i class="fas fa-arrow-left me-2"></i>Powrót do wyszukiwania
-                </a>
-            </div>
-        </div>
-    {% endif %}
-</div>
+    </div>
+{% endif %}
 {% endblock %}
