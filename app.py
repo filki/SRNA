@@ -27,6 +27,14 @@ def search():
     selected_game = request.args.get('game_id', '')
     page = request.args.get('page', 1, type=int)
     
+    # New filters
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    min_playtime = request.args.get('min_playtime', type=int)
+    min_funny = request.args.get('min_funny', type=int)
+    received_free = request.args.get('received_free') == 'true'
+    early_access = request.args.get('early_access') == 'true'
+    
     # Get all games for the dropdown
     games_list = get_games_list()
     
@@ -36,17 +44,29 @@ def search():
         keyword=keyword,
         filter_option=filter_option,
         scoring_method=scoring_method,
-        game_id=selected_game
+        game_id=selected_game,
+        date_from=date_from,
+        date_to=date_to,
+        min_playtime=min_playtime,
+        min_funny=min_funny,
+        received_free=received_free if 'received_free' in request.args else None,
+        early_access=early_access if 'early_access' in request.args else None
     )
     
-    # Get total count with all filters
-    total_reviews = get_total_reviews_count(
+    # Get total count for pagination
+    total_count = get_total_reviews_count(
         keyword=keyword,
         filter_option=filter_option,
-        game_id=selected_game
+        game_id=selected_game,
+        date_from=date_from,
+        date_to=date_to,
+        min_playtime=min_playtime,
+        min_funny=min_funny,
+        received_free=received_free if 'received_free' in request.args else None,
+        early_access=early_access if 'early_access' in request.args else None
     )
     
-    total_pages = (total_reviews + 19) // 20  # 20 reviews per page
+    total_pages = (total_count + 19) // 20  # 20 reviews per page
     
     scoring_methods = [
         {'id': 'tfidf', 'name': 'TF-IDF', 'description': 'Zaawansowane wyszukiwanie uwzględniające częstość słów'},

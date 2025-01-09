@@ -72,7 +72,7 @@ class VisualizationService:
         query = """
             SELECT r.content
             FROM reviews r
-            JOIN games g ON r.game_id = g.game_id
+            JOIN games g ON r.app_id = g.app_id
             WHERE g.genre LIKE ?
             LIMIT 1000
         """

@@ -151,6 +151,32 @@
                     <option value="negative" {% if filter_option == 'negative' %}selected{% endif %}>Tylko negatywne</option>
                 </select>
             </div>
+            <div class="col-md-3">
+                <label class="form-label">Data od:</label>
+                <input type="date" class="form-control" name="date_from" value="{{ date_from if date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Data do:</label>
+                <input type="date" class="form-control" name="date_to" value="{{ date_to if date_to }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Min. czas gry (godz.):</label>
+                <input type="number" class="form-control" name="min_playtime" min="0" value="{{ min_playtime if min_playtime }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Min. głosów śmiesznych:</label>
+                <input type="number" class="form-control" name="min_funny" min="0" value="{{ min_funny if min_funny }}">
+            </div>
+            <div class="col-md-12">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="received_free" value="true" {% if received_free %}checked{% endif %}>
+                    <label class="form-check-label">Otrzymane za darmo</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="early_access" value="true" {% if early_access %}checked{% endif %}>
+                    <label class="form-check-label">Early Access</label>
+                </div>
+            </div>
             <div class="col-md-2">
                 <select class="form-select" name="scoring_method">
                     <option value="tfidf" {% if scoring_method == 'tfidf' %}selected{% endif %}>TF-IDF</option>
