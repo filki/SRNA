@@ -152,13 +152,90 @@
     padding: 5px; /* Optional: add some padding */
     border-radius: 4px; /* Optional: rounded corners */
 }
+
+.game-info {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+.info-item {
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+.info-item .label {
+    color: #acb2b8;
+    margin-right: 0.5rem;
+}
+.info-item .value {
+    color: #66c0f4;
+}
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="game-title" style="color: #66c0f4;">{{ review.game_name }}</h2>
+                    <div class="game-info mt-3">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="info-item">
+                                    <i class="fas fa-code me-2"></i>
+                                    <span class="label">Developer:</span>
+                                    <span class="value">{{ review.game_developer }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-item">
+                                    <i class="fas fa-building me-2"></i>
+                                    <span class="label">Publisher:</span>
+                                    <span class="value">{{ review.game_publisher }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-item">
+                                    <i class="fas fa-users me-2"></i>
+                                    <span class="label">Owners:</span>
+                                    <span class="value">{{ review.game_owners }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-4">
+                                <div class="info-item">
+                                    <i class="fas fa-tags me-2"></i>
+                                    <span class="label">Genre:</span>
+                                    <span class="value">{{ review.game_genre }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-item">
+                                    <i class="fas fa-language me-2"></i>
+                                    <span class="label">Languages:</span>
+                                    <span class="value">{{ review.game_languages }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-item">
+                                    <i class="fas fa-hashtag me-2"></i>
+                                    <span class="label">Tags:</span>
+                                    <span class="value">{{ review.game_tags }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Review Header -->
     <div class="review-header mb-4">
-        <h2 class="game-title mb-3" style="color: #66c0f4;">{{ review.game_name }}</h2>
         <div class="d-flex justify-content-center">
             {% if review %}
                 <span class="review-sentiment {{ 'positive' if review.is_positive == 'Positive' else 'negative' }}">

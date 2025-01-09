@@ -89,9 +89,31 @@
 }
 .selected-game-info {
     background: rgba(0, 0, 0, 0.2);
-    padding: 1rem;
+    padding: 1.5rem;
     border-radius: 8px;
     border: 1px solid rgba(102, 192, 244, 0.2);
+}
+.detail-item {
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+.detail-label {
+    color: #acb2b8;
+    margin-right: 0.5rem;
+}
+.detail-value {
+    color: #66c0f4;
+}
+.btn-steam {
+    background-color: #1b2838;
+    border: 1px solid #66c0f4;
+    color: #66c0f4;
+}
+.btn-steam:hover {
+    background-color: #66c0f4;
+    color: #1b2838;
 }
 .selected-game-info .btn-outline-danger {
     border-color: #ff4444;
@@ -163,17 +185,78 @@
 
     {% if reviews %}
         {% if selected_game %}
-            {% set game_name = games_list | selectattr('app_id', 'equalto', selected_game | int) | map(attribute='name') | first %}
-            <div class="selected-game-info mb-4 text-center">
-                <h4 class="mb-3">
-                    <i class="fas fa-gamepad me-2"></i>
-                    Recenzje gry: <span style="color: #66c0f4;">{{ game_name }}</span>
-                    <a href="{{ url_for('search', keyword=keyword, filter_option=filter_option, scoring_method=scoring_method) }}" 
-                       class="btn btn-sm btn-outline-danger ms-3" 
-                       title="Usuń filtr gry">
-                        <i class="fas fa-times"></i>
-                    </a>
-                </h4>
+            {% set first_review = reviews[0] if reviews else None %}
+            <div class="selected-game-info mb-4">
+                <div class="game-header text-center mb-3">
+                    <h4>
+                        <i class="fas fa-gamepad me-2"></i>
+                        <span style="color: #66c0f4;">{{ first_review.game_name }}</span>
+                        <a href="{{ url_for('search', keyword=keyword, filter_option=filter_option, scoring_method=scoring_method) }}" 
+                           class="btn btn-sm btn-outline-danger ms-3" 
+                           title="Usuń filtr gry">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </h4>
+                </div>
+
+                <div class="game-details">
+                    <div class="row text-center mb-3">
+                        <div class="col-md-4">
+                            <div class="detail-item">
+                                <i class="fas fa-code me-2"></i>
+                                <span class="detail-label">Developer:</span>
+                                <span class="detail-value">{{ first_review.game_developer }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="detail-item">
+                                <i class="fas fa-building me-2"></i>
+                                <span class="detail-label">Publisher:</span>
+                                <span class="detail-value">{{ first_review.game_publisher }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="detail-item">
+                                <i class="fas fa-users me-2"></i>
+                                <span class="detail-label">Owners:</span>
+                                <span class="detail-value">{{ first_review.game_owners }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapse" id="gameExtraInfo">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <div class="detail-item">
+                                    <i class="fas fa-tags me-2"></i>
+                                    <span class="detail-label">Genre:</span>
+                                    <span class="detail-value">{{ first_review.game_genre }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="detail-item">
+                                    <i class="fas fa-language me-2"></i>
+                                    <span class="detail-label">Languages:</span>
+                                    <span class="detail-value">{{ first_review.game_languages }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="detail-item">
+                                    <i class="fas fa-hashtag me-2"></i>
+                                    <span class="detail-label">Tags:</span>
+                                    <span class="detail-value">{{ first_review.game_tags }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-2">
+                        <button class="btn btn-sm btn-steam" type="button" data-bs-toggle="collapse" data-bs-target="#gameExtraInfo">
+                            <i class="fas fa-chevron-down me-1"></i>
+                            <span class="collapse-text">Show More</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         {% endif %}
         <div class="reviews-section">
@@ -293,6 +376,20 @@ document.addEventListener('DOMContentLoaded', function() {
             gamesDropdown.classList.remove('show');
         }
     });
+
+    // Handle collapse button text
+    const collapseButton = document.querySelector('[data-bs-toggle="collapse"]');
+    if (collapseButton) {
+        const collapseText = collapseButton.querySelector('.collapse-text');
+        document.querySelector('#gameExtraInfo').addEventListener('show.bs.collapse', function () {
+            collapseText.textContent = 'Show Less';
+            collapseButton.querySelector('i').classList.replace('fa-chevron-down', 'fa-chevron-up');
+        });
+        document.querySelector('#gameExtraInfo').addEventListener('hide.bs.collapse', function () {
+            collapseText.textContent = 'Show More';
+            collapseButton.querySelector('i').classList.replace('fa-chevron-up', 'fa-chevron-down');
+        });
+    }
 });
 </script>
 {% endblock %}
