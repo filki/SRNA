@@ -1,77 +1,123 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wyszukiwarka Recenzji</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='search.css') }}">
 </head>
 <body>
-    <header>
-        <h1>Wyszukiwarka Recenzji</h1>
-    </header>
-    <div class="container">
-        <!-- Formularz wyszukiwania -->
-        <form method="GET" action="/search">
-            <label for="keyword">Słowo kluczowe:</label>
-            <input type="text" id="keyword" name="keyword" placeholder="Wpisz słowo kluczowe" value="{{ keyword }}">
+    <div class="app-container">
+        <header class="app-header">
+            <h1><i class="fas fa-search"></i> Wyszukiwarka Recenzji</h1>
+        </header>
 
-            <label for="filter">Filtruj według rekomendacji:</label>
-            <select id="filter" name="filter">
-                <option value="all" {% if selected_filter == 'all' %}selected{% endif %}>Wszystkie</option>
-                <option value="positive" {% if selected_filter == 'positive' %}selected{% endif %}>Polecane</option>
-                <option value="negative" {% if selected_filter == 'negative' %}selected{% endif %}>Niepolecane</option>
-            </select>
+        <main class="main-content">
+            <div class="search-container">
+                <form method="GET" action="/search" class="search-form">
+                    <div class="search-input-group">
+                        <div class="search-field">
+                            <i class="fas fa-keyboard"></i>
+                            <input type="text" 
+                                   id="keyword" 
+                                   name="keyword" 
+                                   placeholder="Wpisz słowo kluczowe..." 
+                                   value="{{ keyword }}"
+                                   autocomplete="off">
+                        </div>
+                        <div class="filter-field">
+                            <i class="fas fa-filter"></i>
+                            <select id="filter" name="filter">
+                                <option value="all" {% if selected_filter == 'all' %}selected{% endif %}>Wszystkie</option>
+                                <option value="positive" {% if selected_filter == 'positive' %}selected{% endif %}>Polecane</option>
+                                <option value="negative" {% if selected_filter == 'negative' %}selected{% endif %}>Niepolecane</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="search-button">
+                            <i class="fas fa-search"></i>
+                            Szukaj
+                        </button>
+                    </div>
+                </form>
+            </div>
 
-            <button type="submit" class="btn">Szukaj</button>
-        </form>
+            {% if reviews %}
+            <div class="results-container">
+                <div class="results-header">
+                    <h2>Wyniki wyszukiwania</h2>
+                    <span class="results-count">Strona {{ current_page }} z {{ total_pages }}</span>
+                </div>
 
-        <!-- Tabela wyników wyszukiwania -->
-        <h2>Wyniki wyszukiwania:</h2>
-        {% if reviews %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Autor</th>
-                    <th>Recenzja</th>
-                    <th>Rekomendacja</th>
-                    <th>Czas</th>
-                    <th>Relewancja</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for review in reviews %}
-                <tr>
-                    <td>{{ review['author_id'] }}</td>
-                    <td style="max-width: 400px; word-wrap: break-word;">
-                        <a href="{{ url_for('review_detail', review_id=review['id']) }}" style="text-decoration: none; color: #337ab7;">
-                            {{ review['content'] }}
-                        </a>
-                    </td>
-                    <td>{{ 'Polecane' if review['is_positive'] == 'Positive' else 'Niepolecane' }}</td>
-                    <td>{{ review['timestamp_created'] }}</td>
-                    <td>{{ review['relevance'] if review['relevance'] != 'NULL' else 'NULL' }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                <div class="reviews-grid">
+                    {% for review in reviews %}
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="author-info">
+                                <i class="fas fa-user"></i>
+                                <span>{{ review['author_id'][:8] }}...</span>
+                            </div>
+                            <span class="review-date">
+                                <i class="far fa-clock"></i>
+                                {{ review['timestamp_created'] }}
+                            </span>
+                        </div>
+                        <div class="review-content">
+                            <a href="{{ url_for('review_detail', review_id=review['id']) }}">
+                                {{ review['content'][:200] }}{% if review['content']|length > 200 %}...{% endif %}
+                            </a>
+                        </div>
+                        <div class="review-footer">
+                            <span class="recommendation {% if review['is_positive'] == 'Positive' %}positive{% else %}negative{% endif %}">
+                                <i class="fas {% if review['is_positive'] == 'Positive' %}fa-thumbs-up{% else %}fa-thumbs-down{% endif %}"></i>
+                                {{ 'Polecane' if review['is_positive'] == 'Positive' else 'Niepolecane' }}
+                            </span>
+                            {% if review['relevance'] != 'NULL' %}
+                            <span class="relevance">
+                                <i class="fas fa-chart-line"></i>
+                                {{ "%.2f"|format(review['relevance']|float) }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
 
-        <!-- Paginacja -->
-        <div class="pagination">
-            {% if current_page > 1 %}
-            <a href="/search?page={{ current_page - 1 }}&keyword={{ keyword }}&filter={{ selected_filter }}" class="btn">Poprzednia</a>
+                <div class="pagination">
+                    {% if current_page > 1 %}
+                    <a href="/search?page={{ current_page - 1 }}&keyword={{ keyword }}&filter={{ selected_filter }}" 
+                       class="pagination-button">
+                        <i class="fas fa-chevron-left"></i> Poprzednia
+                    </a>
+                    {% endif %}
+                    
+                    <div class="page-info">
+                        <span>Strona {{ current_page }} z {{ total_pages }}</span>
+                    </div>
+
+                    {% if current_page < total_pages %}
+                    <a href="/search?page={{ current_page + 1 }}&keyword={{ keyword }}&filter={{ selected_filter }}" 
+                       class="pagination-button">
+                        Następna <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="no-results">
+                <i class="fas fa-search"></i>
+                <p>Brak wyników dla podanego słowa kluczowego.</p>
+            </div>
             {% endif %}
-            <span>Strona {{ current_page }} z {{ total_pages }}</span>
-            {% if current_page < total_pages %}
-            <a href="/search?page={{ current_page + 1 }}&keyword={{ keyword }}&filter={{ selected_filter }}" class="btn">Następna</a>
-            {% endif %}
-        </div>
-        {% else %}
-        <p>Brak wyników dla podanego słowa kluczowego.</p>
-        {% endif %}
+        </main>
 
-        <!-- Przycisk powrotu do strony głównej -->
-        <a href="/" class="btn">Powrót do strony głównej</a>
+        <footer class="app-footer">
+            <a href="/" class="home-button">
+                <i class="fas fa-home"></i>
+                Powrót do strony głównej
+            </a>
+        </footer>
     </div>
 </body>
 </html>
