@@ -5,7 +5,7 @@
     <!-- Game Info Section -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0">Informacje o grze: {{ review.game_name }}</h5>
+            <h5 class="mb-0 section-header">Informacje o grze: {{ review.game_name }}</h5>
         </div>
         <div class="card-body">
             <div class="game-stats-grid">
@@ -85,23 +85,100 @@
     <!-- Text Analysis Section -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0">Text Analysis</h5>
+            <h5 class="mb-0 section-header">Text Analysis</h5>
         </div>
         <div class="card-body">
-            <div class="text-analysis-grid">
-                {% for stat_name, stat_value in review.text_stats.items() if stat_name not in ['morphological_analysis', 'summary_stats'] %}
-                <div class="stat-item">
-                    <i class="fas {{ {
-                        'word_count': 'fa-font',
-                        'avg_word_length': 'fa-text-width',
-                        'sentence_count': 'fa-paragraph',
-                        'avg_sentence_length': 'fa-align-left',
-                        'unique_words': 'fa-fingerprint',
-                        'special_chars_percent': 'fa-percentage',
-                        'caps_words_count': 'fa-font'
-                    }[stat_name] }}"></i>
-                    <div class="stat-content">
-                        <span class="stat-label">{{ {
+            <!-- Sentiment Analysis -->
+            <div class="sentiment-analysis mb-4">
+                <h6 class="text-muted mb-3 section-header" style="color: #66c0f4 !important; font-weight: 500;">Analiza sentymentu</h6>
+                <div class="sentiment-grid">
+                    <div class="sentiment-item">
+                        <div class="sentiment-score {{ review.text_stats.sentiment.assessment }}">
+                            <i class="fas {{ {
+                                'positive': 'fa-smile',
+                                'negative': 'fa-frown',
+                                'neutral': 'fa-meh'
+                            }[review.text_stats.sentiment.assessment] }}"></i>
+                            <span class="score-text">{{ review.text_stats.sentiment.assessment|title }}</span>
+                            <span class="intensity-badge {{ review.text_stats.sentiment.intensity.label }}">
+                                {{ review.text_stats.sentiment.intensity.label|title }}
+                            </span>
+                        </div>
+                        <div class="sentiment-details">
+                            <div class="sentiment-metric">
+                                <div class="metric-header">
+                                    <span class="metric-label">Polarity</span>
+                                    <span class="metric-value">{{ review.text_stats.sentiment.polarity_percentage }}%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ review.text_stats.sentiment.polarity_percentage }}%"
+                                         aria-valuenow="{{ review.text_stats.sentiment.polarity }}"
+                                         aria-valuemin="-1" aria-valuemax="1">
+                                    </div>
+                                </div>
+                                <span class="metric-description">
+                                    {{ "Very Negative" if review.text_stats.sentiment.polarity <= -0.75 else
+                                       "Negative" if review.text_stats.sentiment.polarity <= -0.25 else
+                                       "Slightly Negative" if review.text_stats.sentiment.polarity < 0 else
+                                       "Neutral" if review.text_stats.sentiment.polarity == 0 else
+                                       "Slightly Positive" if review.text_stats.sentiment.polarity < 0.25 else
+                                       "Positive" if review.text_stats.sentiment.polarity < 0.75 else
+                                       "Very Positive" }}
+                                </span>
+                            </div>
+                            <div class="sentiment-metric">
+                                <div class="metric-header">
+                                    <span class="metric-label">Subjectivity</span>
+                                    <span class="metric-value">{{ review.text_stats.sentiment.subjectivity_percentage }}%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ review.text_stats.sentiment.subjectivity_percentage }}%"
+                                         aria-valuenow="{{ review.text_stats.sentiment.subjectivity }}"
+                                         aria-valuemin="0" aria-valuemax="1">
+                                    </div>
+                                </div>
+                                <span class="metric-description">
+                                    {{ "Very Objective" if review.text_stats.sentiment.subjectivity <= 0.2 else
+                                       "Objective" if review.text_stats.sentiment.subjectivity <= 0.4 else
+                                       "Mixed" if review.text_stats.sentiment.subjectivity <= 0.6 else
+                                       "Subjective" if review.text_stats.sentiment.subjectivity <= 0.8 else
+                                       "Very Subjective" }}
+                                </span>
+                            </div>
+                            <div class="sentiment-metric">
+                                <div class="metric-header">
+                                    <span class="metric-label">Intensity</span>
+                                    <span class="metric-value">{{ review.text_stats.sentiment.intensity.percentage }}%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ review.text_stats.sentiment.intensity.percentage }}%"
+                                         aria-valuenow="{{ review.text_stats.sentiment.intensity.value }}"
+                                         aria-valuemin="0" aria-valuemax="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="basic-analysis mb-4">
+                <h6 class="text-muted mb-3 section-header">Analiza podstawowa</h6>
+                <div class="basic-analysis-grid">
+                    {% for stat_name, stat_value in review.text_stats.items() if stat_name not in ['morphological_analysis', 'summary_stats', 'sentiment'] %}
+                    <div class="basic-metric">
+                        <i class="fas {{ {
+                            'word_count': 'fa-font',
+                            'avg_word_length': 'fa-text-width',
+                            'sentence_count': 'fa-paragraph',
+                            'avg_sentence_length': 'fa-align-left',
+                            'unique_words': 'fa-fingerprint',
+                            'special_chars_percent': 'fa-percentage',
+                            'caps_words_count': 'fa-font'
+                        }[stat_name] }}"></i>
+                        <span class="metric-label">{{ {
                             'word_count': 'Word Count',
                             'avg_word_length': 'Average Word Length',
                             'sentence_count': 'Sentence Count',
@@ -110,10 +187,10 @@
                             'special_chars_percent': 'Special Characters %',
                             'caps_words_count': 'Words in CAPS'
                         }[stat_name] }}</span>
-                        <span class="stat-value">{{ '%.1f'|format(stat_value) if stat_name in ['avg_word_length', 'avg_sentence_length', 'special_chars_percent'] else stat_value }}</span>
+                        <span class="metric-value">{{ '%.1f'|format(stat_value) if stat_name in ['avg_word_length', 'avg_sentence_length', 'special_chars_percent'] else stat_value }}</span>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </div>
     </div>
@@ -121,12 +198,12 @@
     <!-- Morphological Analysis Section -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0">Morphological Analysis</h5>
+            <h5 class="mb-0 section-header">Morphological Analysis</h5>
         </div>
         <div class="card-body">
             <!-- Summary Stats -->
             <div class="summary-stats mb-4">
-                <h6 class="text-muted mb-3">Analysis Summary</h6>
+                <h6 class="text-muted mb-3 section-header">Analysis Summary</h6>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <span class="summary-label">Total Tokens:</span>
@@ -177,7 +254,7 @@
     <!-- Author Stats Section -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0">Statystyki Autora</h5>
+            <h5 class="mb-0 section-header">Statystyki Autora</h5>
         </div>
         <div class="card-body">
             <div class="author-stats-grid">
@@ -457,5 +534,187 @@
 .btn-steam:hover {
     background: linear-gradient(to right, #1a44c2 0%, #47bfff 100%);
     color: white;
+}
+/* Sentiment Analysis Styles */
+.sentiment-analysis {
+    background: rgba(24, 37, 49, 0.95);
+    border: 1px solid rgba(103, 193, 245, 0.2);
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.sentiment-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.sentiment-item {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.sentiment-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-radius: 6px;
+    min-width: 120px;
+}
+
+.sentiment-score i {
+    font-size: 2rem;
+}
+
+.sentiment-score.positive {
+    background: rgba(87, 153, 87, 0.2);
+    color: #57b957;
+}
+
+.sentiment-score.negative {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+}
+
+.sentiment-score.neutral {
+    background: rgba(108, 117, 125, 0.2);
+    color: #6c757d;
+}
+
+.score-text {
+    font-weight: 500;
+    font-size: 1.1em;
+}
+
+.sentiment-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sentiment-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.metric-label {
+    color: #8f98a0;
+    font-size: 0.9em;
+}
+
+.progress {
+    height: 0.5rem;
+    background: rgba(103, 193, 245, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: #67c1f5;
+    transition: width 0.3s ease;
+}
+
+.sentiment-score.positive .progress-bar {
+    background: #57b957;
+}
+
+.sentiment-score.negative .progress-bar {
+    background: #dc3545;
+}
+.metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.metric-value {
+    color: #e9e9e9;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.metric-description {
+    color: #8f98a0;
+    font-size: 0.8em;
+    margin-top: 0.25rem;
+}
+
+.intensity-badge {
+    font-size: 0.8em;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.intensity-badge.mild {
+    background: rgba(108, 117, 125, 0.2);
+    color: #6c757d;
+}
+
+.intensity-badge.moderate {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+}
+
+.intensity-badge.strong {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+}
+
+/* Section Headers */
+.section-header {
+    color: #66c0f4 !important;
+    font-weight: 500;
+}
+.basic-analysis {
+    background: rgba(24, 37, 49, 0.95);
+    border: 1px solid rgba(103, 193, 245, 0.2);
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.basic-analysis-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+}
+
+.basic-metric {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid rgba(103, 193, 245, 0.1);
+}
+
+.basic-metric:last-child {
+    border-bottom: none;
+}
+
+.basic-metric i {
+    color: #67c1f5;
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.basic-metric .metric-label {
+    color: #8f98a0;
+    font-size: 0.9em;
+    flex: 1;
+}
+
+.basic-metric .metric-value {
+    color: #e9e9e9;
+    font-size: 0.9em;
+    font-weight: 500;
+    margin-left: auto;
 }
 {% endblock %}

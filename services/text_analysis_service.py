@@ -1,6 +1,7 @@
 import re
 import spacy
 from typing import Dict, Any
+from textblob import TextBlob
 
 class TextAnalysisService:
     def __init__(self):
@@ -11,7 +12,76 @@ class TextAnalysisService:
             print("Warning: English language model not found. Downloading...")
             import subprocess
             subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
+            subprocess.run(["pip", "install", "textblob"])
             self.nlp = spacy.load('en_core_web_sm')
+
+    def analyze_sentiment(self, text: str) -> Dict[str, Any]:
+        """Analyze sentiment of text using TextBlob."""
+        if not text:
+            return {
+                'polarity': 0.0,
+                'subjectivity': 0.0,
+                'assessment': 'neutral',
+                'polarity_percentage': 50,
+                'subjectivity_percentage': 0,
+                'intensity': {
+                    'value': 0.0,
+                    'label': 'neutral'
+                }
+            }
+
+        blob = TextBlob(text)
+        polarity = blob.sentiment.polarity
+        subjectivity = blob.sentiment.subjectivity
+
+        # Calculate intensity based on word modifiers and punctuation
+        intensity_value = 0.0
+        exclamation_count = text.count('!')
+        caps_words = len(re.findall(r'\b[A-Z]{2,}+\b', text))
+        intensity_modifiers = ['very', 'really', 'extremely', 'absolutely', 'completely']
+        
+        # Add intensity for exclamations (max 0.3)
+        intensity_value += min(exclamation_count * 0.1, 0.3)
+        
+        # Add intensity for caps words (max 0.3)
+        intensity_value += min(caps_words * 0.1, 0.3)
+        
+        # Add intensity for modifier words (max 0.4)
+        modifier_count = sum(1 for word in intensity_modifiers if word.lower() in text.lower())
+        intensity_value += min(modifier_count * 0.1, 0.4)
+
+        # Determine intensity label
+        if intensity_value < 0.3:
+            intensity_label = 'mild'
+        elif intensity_value < 0.6:
+            intensity_label = 'moderate'
+        else:
+            intensity_label = 'strong'
+
+        # Determine sentiment assessment
+        if polarity > 0.1:
+            assessment = 'positive'
+        elif polarity < -0.1:
+            assessment = 'negative'
+        else:
+            assessment = 'neutral'
+
+        # Convert scores to percentages for easier visualization
+        polarity_percentage = ((polarity + 1) / 2) * 100  # Convert -1 to 1 to 0-100%
+        subjectivity_percentage = subjectivity * 100
+
+        return {
+            'polarity': round(polarity, 2),
+            'subjectivity': round(subjectivity, 2),
+            'assessment': assessment,
+            'polarity_percentage': round(polarity_percentage, 1),
+            'subjectivity_percentage': round(subjectivity_percentage, 1),
+            'intensity': {
+                'value': round(intensity_value, 2),
+                'label': intensity_label,
+                'percentage': round(intensity_value * 100, 1)
+            }
+        }
 
     def analyze_text(self, text: str) -> Dict[str, Any]:
         """Perform text analysis including morphological analysis using spaCy."""
@@ -29,6 +99,11 @@ class TextAnalysisService:
                     'pos_counts': {},
                     'dep_counts': {},
                     'total_tokens': 0
+                },
+                'sentiment': {
+                    'polarity': 0,
+                    'subjectivity': 0,
+                    'assessment': 'neutral'
                 }
             }
 
@@ -51,6 +126,9 @@ class TextAnalysisService:
         sentence_count = len(sentences)
         avg_sentence_length = word_count / sentence_count if sentence_count > 0 else 0
         special_chars_percent = (special_chars / total_chars * 100) if total_chars > 0 else 0
+
+        # Perform sentiment analysis
+        sentiment = self.analyze_sentiment(text)
 
         # Perform morphological analysis using spaCy
         morphological_analysis = []
@@ -93,7 +171,8 @@ class TextAnalysisService:
                 'pos_counts': pos_counts,
                 'dep_counts': dep_counts,
                 'total_tokens': total_tokens
-            }
+            },
+            'sentiment': sentiment
         }
 
     def _get_pos_description(self, pos: str) -> str:
