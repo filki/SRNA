@@ -1,437 +1,309 @@
 {% extends "base.html" %}
 
-{% block title %}Szczegóły Recenzji - Steam Review Search System{% endblock %}
-
-{% block additional_styles %}
-.review-header {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-.review-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    background: linear-gradient(45deg, #66c0f4, #1999ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.review-sentiment {
-    font-size: 1.2rem;
-    font-weight: 600;
-    padding: 0.5rem 1rem;
-    border-radius: 25px;
-    display: inline-block;
-    margin-bottom: 1rem;
-}
-.review-sentiment.positive {
-    background: rgba(102, 192, 244, 0.1);
-    color: #66c0f4;
-}
-.review-sentiment.negative {
-    background: rgba(255, 68, 68, 0.1);
-    color: #ff4444;
-}
-.review-metadata {
-    color: #acb2b8;
-    font-size: 0.9rem;
-    margin-bottom: 2rem;
-}
-.review-content {
-    font-size: 1.1rem;
-    line-height: 1.8;
-    color: #e9e9e9;
-    white-space: pre-wrap;
-}
-.author-stats {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 15px;
-    padding: 1.5rem;
-    margin-top: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.stat-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-.stat-icon {
-    width: 40px;
-    height: 40px;
-    background: rgba(102, 192, 244, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 1rem;
-    color: #66c0f4;
-}
-.stat-text {
-    flex-grow: 1;
-}
-.stat-label {
-    color: #acb2b8;
-    font-size: 0.9rem;
-    margin-bottom: 0.2rem;
-}
-.stat-value {
-    color: #ffffff;
-    font-weight: 600;
-}
-.text-analysis-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    padding: 1.5rem;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-}
-
-.stat-item {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    transition: transform 0.2s, background 0.2s;
-}
-
-.stat-item:hover {
-    transform: translateY(-2px);
-    background: rgba(0, 0, 0, 0.4);
-}
-
-.stat-icon {
-    font-size: 1.5rem;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(66, 153, 225, 0.1);
-    border-radius: 8px;
-    margin-right: 1rem;
-    color: #4299e1;
-}
-
-.stat-text {
-    flex: 1;
-}
-
-.stat-label {
-    font-size: 0.9rem;
-    color: #a0aec0;
-    margin-bottom: 0.25rem;
-}
-
-.stat-value {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #e2e8f0;
-}
-
-.content-box {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    margin-bottom: 2rem;
-}
-
-.review-title {
-    color: #e2e8f0;
-    font-size: 1.25rem;
-}
-
-.review-text {
-    color: #a0aec0;
-    line-height: 1.6;
-    white-space: pre-wrap;
-}
-
-.light-blue-text {
-    color: #00bfff; /* Change to a brighter light blue */
-    background-color: rgba(255, 255, 255, 0.1); /* Optional: semi-transparent background */
-    padding: 5px; /* Optional: add some padding */
-    border-radius: 4px; /* Optional: rounded corners */
-}
-
-.game-info {
-    background: rgba(0, 0, 0, 0.2);
-    padding: 1rem;
-    border-radius: 8px;
-    margin-top: 1rem;
-}
-.info-item {
-    padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-}
-.info-item .label {
-    color: #acb2b8;
-    margin-right: 0.5rem;
-}
-.info-item .value {
-    color: #66c0f4;
-}
-{% endblock %}
-
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="game-title" style="color: #66c0f4;">{{ review.game_name }}</h2>
-                    <div class="game-info mt-3">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="info-item">
-                                    <i class="fas fa-code me-2"></i>
-                                    <span class="label">Developer:</span>
-                                    <span class="value">{{ review.game_developer }}</span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-item">
-                                    <i class="fas fa-building me-2"></i>
-                                    <span class="label">Publisher:</span>
-                                    <span class="value">{{ review.game_publisher }}</span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-item">
-                                    <i class="fas fa-users me-2"></i>
-                                    <span class="label">Owners:</span>
-                                    <span class="value">{{ review.game_owners }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col-md-4">
-                                <div class="info-item">
-                                    <i class="fas fa-tags me-2"></i>
-                                    <span class="label">Genre:</span>
-                                    <span class="value">{{ review.game_genre }}</span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-item">
-                                    <i class="fas fa-language me-2"></i>
-                                    <span class="label">Languages:</span>
-                                    <span class="value">{{ review.game_languages }}</span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="info-item">
-                                    <i class="fas fa-hashtag me-2"></i>
-                                    <span class="label">Tags:</span>
-                                    <span class="value">{{ review.game_tags }}</span>
-                                </div>
-                            </div>
-                        </div>
+<div class="container-fluid mt-4">
+    <!-- Game Info Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="game-title mb-0">{{ review.game_name }}</h2>
+        </div>
+        <div class="card-body game-info">
+            <div class="info-grid">
+                <div class="info-item">
+                    <i class="fas fa-code"></i>
+                    <div class="info-content">
+                        <span class="info-label">Developer</span>
+                        <span class="info-value">{{ review.game_developer }}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-building"></i>
+                    <div class="info-content">
+                        <span class="info-label">Publisher</span>
+                        <span class="info-value">{{ review.game_publisher }}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-users"></i>
+                    <div class="info-content">
+                        <span class="info-label">Owners</span>
+                        <span class="info-value">{{ review.game_owners }}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-gamepad"></i>
+                    <div class="info-content">
+                        <span class="info-label">Genre</span>
+                        <span class="info-value">{{ review.game_genre }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-item mt-3">
+                <i class="fas fa-language"></i>
+                <div class="info-content">
+                    <span class="info-label">Languages</span>
+                    <div class="info-value languages-list">
+                        {% for language in review.game_languages.split(',') %}
+                            <span class="language-item">{{ language.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-item mt-3">
+                <i class="fas fa-tags"></i>
+                <div class="info-content">
+                    <span class="info-label">Tags</span>
+                    <div class="info-value tags">
+                        {% for tag in review.game_tags.split(',') %}
+                            <span class="tag">{{ tag.strip() }}</span>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Review Header -->
-    <div class="review-header mb-4">
-        <div class="d-flex justify-content-center">
-            {% if review %}
-                <span class="review-sentiment {{ 'positive' if review.is_positive == 'Positive' else 'negative' }}">
+    <!-- Review Content Section -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <span class="review-sentiment {{ 'positive' if review.is_positive == 'Positive' else 'negative' }} me-3">
                     <i class="fas {{ 'fa-thumbs-up' if review.is_positive == 'Positive' else 'fa-thumbs-down' }} me-2"></i>
                     {{ 'Pozytywna' if review.is_positive == 'Positive' else 'Negatywna' }} Recenzja
                 </span>
-            {% endif %}
-        </div>
-        <div class="d-flex justify-content-center gap-3">
-            {% if review %}
-                <span class="light-blue-text">
-                    <i class="far fa-clock"></i> {{ review.timestamp_created }}
+                <span class="review-date">
+                    <i class="far fa-clock me-1"></i>
+                    {{ review.timestamp_created }}
                 </span>
-                {% if review.steam_purchase %}
-                <span class="light-blue-text">
-                    <i class="fas fa-shopping-cart"></i> Zakupiono na Steam
-                </span>
-                {% endif %}
-            {% endif %}
+            </div>
         </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="row">
-        <!-- Author Stats Sidebar -->
-        <div class="col-md-4">
-            {% if review %}
-                <div class="author-stats">
-                    <h5 class="mb-4">Statystyki autora</h5>
-                    
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-gamepad"></i>
-                        </div>
-                        <div class="stat-text">
-                            <div class="stat-label">Posiadane gry</div>
-                            <div class="stat-value">{{ review.author.games_owned }}</div>
-                        </div>
-                    </div>
-
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-pencil-alt"></i>
-                        </div>
-                        <div class="stat-text">
-                            <div class="stat-label">Liczba recenzji</div>
-                            <div class="stat-value">{{ review.author.total_reviews }}</div>
-                        </div>
-                    </div>
-
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-text">
-                            <div class="stat-label">Całkowity czas gry</div>
-                            <div class="stat-value">{{ review.author.playtime_forever }} godz.</div>
-                        </div>
-                    </div>
-
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-history"></i>
-                        </div>
-                        <div class="stat-text">
-                            <div class="stat-label">Czas gry (ostatnie 2 tygodnie)</div>
-                            <div class="stat-value">{{ review.author.playtime_last_two_weeks }} godz.</div>
-                        </div>
-                    </div>
-
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-stopwatch"></i>
-                        </div>
-                        <div class="stat-text">
-                            <div class="stat-label">Czas gry przy recenzji</div>
-                            <div class="stat-value">{{ review.author.playtime_at_review }} godz.</div>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-
-        <!-- Review Content -->
-        <div class="col-md-8">
-            {% if review %}
-                <div class="review-content">
-                    <div class="content-box p-4">
-                        <h4 class="review-title mb-4">Treść recenzji:</h4>
-                        <p class="review-text">{{ review.content }}</p>
-                    </div>
-                </div>
-            {% endif %}
+        <div class="card-body">
+            <div class="review-content">{{ review.content }}</div>
         </div>
     </div>
 
     <!-- Text Analysis Section -->
-    <div class="row mt-5">
-        <div class="col-12">
-            <h4 class="text-center mb-4">Analiza tekstu</h4>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Analiza Tekstu</h5>
         </div>
-        <div class="col-md-12">
-            {% if review %}
-                <div class="text-analysis-grid">
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-font"></i>
-                        </div>
-                        <div class="stat-text">
-                            <div class="stat-label">Liczba słów</div>
-                            <div class="stat-value">{{ review.text_stats.word_count }}</div>
-                        </div>
-                    </div>
-
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-text-width"></i>
-                        </div>
-                        <div class="stat-text">
-                            <div class="stat-label">Średnia długość słowa</div>
-                            <div class="stat-value">{{ review.text_stats.avg_word_length }} znaków</div>
-                        </div>
-                    </div>
-
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-paragraph"></i>
-                        </div>
-                        <div class="stat-text">
-                            <div class="stat-label">Liczba zdań</div>
-                            <div class="stat-value">{{ review.text_stats.sentence_count }}</div>
-                        </div>
-                    </div>
-
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-align-left"></i>
-                        </div>
-                        <div class="stat-text">
-                            <div class="stat-label">Średnia długość zdania</div>
-                            <div class="stat-value">{{ review.text_stats.avg_sentence_length }} słów</div>
-                        </div>
-                    </div>
-
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-fingerprint"></i>
-                        </div>
-                        <div class="stat-text">
-                            <div class="stat-label">Unikalne słowa</div>
-                            <div class="stat-value">{{ review.text_stats.unique_words }}</div>
-                        </div>
-                    </div>
-
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-percentage"></i>
-                        </div>
-                        <div class="stat-text">
-                            <div class="stat-label">Znaki specjalne</div>
-                            <div class="stat-value">{{ review.text_stats.special_chars_percent }}%</div>
-                        </div>
-                    </div>
-
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-volume-up"></i>
-                        </div>
-                        <div class="stat-text">
-                            <div class="stat-label">Słowa pisane CAPS LOCK</div>
-                            <div class="stat-value">{{ review.text_stats.caps_words_count }}</div>
-                        </div>
+        <div class="card-body">
+            <div class="text-analysis-grid">
+                {% for stat_name, stat_value in review.text_stats.items() %}
+                <div class="stat-item">
+                    <i class="fas {{ {
+                        'word_count': 'fa-font',
+                        'avg_word_length': 'fa-text-width',
+                        'sentence_count': 'fa-paragraph',
+                        'avg_sentence_length': 'fa-align-left',
+                        'unique_words': 'fa-fingerprint',
+                        'special_chars_ratio': 'fa-percentage',
+                        'caps_ratio': 'fa-volume-up'
+                    }[stat_name] }}"></i>
+                    <div class="stat-content">
+                        <span class="stat-label">{{ {
+                            'word_count': 'Liczba słów',
+                            'avg_word_length': 'Średnia długość słowa',
+                            'sentence_count': 'Liczba zdań',
+                            'avg_sentence_length': 'Średnia długość zdania',
+                            'unique_words': 'Unikalne słowa',
+                            'special_chars_ratio': 'Znaki specjalne',
+                            'caps_ratio': 'Słowa pisane CAPS LOCK'
+                        }[stat_name] }}</span>
+                        <span class="stat-value">{{ '%.1f'|format(stat_value) if stat_name in ['avg_word_length', 'avg_sentence_length', 'special_chars_ratio'] else stat_value }}</span>
                     </div>
                 </div>
-            {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Author Stats Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Statystyki Autora</h5>
+        </div>
+        <div class="card-body">
+            <div class="author-stats-grid">
+                <div class="stat-item">
+                    <i class="fas fa-gamepad"></i>
+                    <div class="stat-content">
+                        <span class="stat-label">Posiadane gry</span>
+                        <span class="stat-value">{{ review.games_owned }}</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-pencil-alt"></i>
+                    <div class="stat-content">
+                        <span class="stat-label">Liczba recenzji</span>
+                        <span class="stat-value">{{ review.total_reviews }}</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-clock"></i>
+                    <div class="stat-content">
+                        <span class="stat-label">Całkowity czas gry</span>
+                        <span class="stat-value">{{ review.playtime_forever }} godz.</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-history"></i>
+                    <div class="stat-content">
+                        <span class="stat-label">Czas gry (ostatnie 2 tygodnie)</span>
+                        <span class="stat-value">{{ review.playtime_last_two_weeks or 0 }} godz.</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-stopwatch"></i>
+                    <div class="stat-content">
+                        <span class="stat-label">Czas gry przy recenzji</span>
+                        <span class="stat-value">{{ review.playtime_at_review }} godz.</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Back Button -->
-    <div class="text-center mt-5">
-        <a href="{{ url_for('search') }}" class="btn btn-primary">
-            <i class="fas fa-arrow-left me-2"></i>POWRÓT DO WYSZUKIWANIA
+    <div class="mb-4">
+        <a href="{{ url_for('search') }}" class="btn btn-steam">
+            <i class="fas fa-arrow-left me-2"></i>
+            Powrót do wyszukiwania
         </a>
     </div>
 </div>
+{% endblock %}
 
-{% if not review %}
-    <div class="card">
-        <div class="card-body text-center">
-            <i class="fas fa-exclamation-circle fa-3x mb-3" style="color: #ff4444;"></i>
-            <h3>Nie znaleziono recenzji</h3>
-            <p class="text-muted">Przepraszamy, ale nie mogliśmy znaleźć tej recenzji.</p>
-            <a href="{{ url_for('search') }}" class="btn btn-steam mt-3">
-                <i class="fas fa-arrow-left me-2"></i>Powrót do wyszukiwania
-            </a>
-        </div>
-    </div>
-{% endif %}
+{% block additional_styles %}
+.card {
+    background: rgba(24, 37, 49, 0.95);
+    border: none;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem 1.5rem;
+}
+
+.card-header h2, .card-header h5 {
+    color: #66c0f4;
+    font-weight: 500;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.game-info {
+    color: #acb2b8;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.text-analysis-grid, .author-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.stat-item {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.stat-item i {
+    color: #66c0f4;
+    width: 20px;
+    margin-top: 3px;
+}
+
+.stat-content {
+    margin-left: 0.75rem;
+    flex-grow: 1;
+}
+
+.stat-label {
+    display: block;
+    color: #8f98a0;
+    font-size: 12px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    color: #e9e9e9;
+    font-size: 14px;
+}
+
+.review-content {
+    color: #e9e9e9;
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.review-date {
+    color: #8f98a0;
+    font-size: 14px;
+}
+
+.review-sentiment {
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 3px;
+}
+
+.review-sentiment.positive {
+    background: rgba(103, 193, 245, 0.1);
+    color: #67c1f5;
+}
+
+.review-sentiment.negative {
+    background: rgba(255, 68, 68, 0.1);
+    color: #ff4444;
+}
+
+.languages-list, .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.language-item, .tag {
+    background: rgba(103, 193, 245, 0.1);
+    color: #67c1f5;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 13px;
+}
+
+.btn-steam {
+    background: linear-gradient(to right, #47bfff 0%, #1a44c2 100%);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-steam:hover {
+    background: linear-gradient(to right, #1a44c2 0%, #47bfff 100%);
+    color: white;
+}
 {% endblock %}
