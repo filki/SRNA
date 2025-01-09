@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, send_file, abort
 from services.visualization_service import generate_top_authors_svg
 from services.db_service import cached_get_reviews, get_total_reviews_count, get_review_by_id
+import sqlite3
 
 app = Flask(__name__)
 
@@ -73,6 +74,22 @@ def review_detail(review_id):
     if review is None:
         abort(404)
     return render_template('review_detail.html', review=review)
+
+@app.route('/games')
+def show_games():
+    # Connect to the database
+    conn = sqlite3.connect('data/steamspy_data.db')
+    cursor = conn.cursor()
+
+    # Query the games table
+    cursor.execute("SELECT * FROM games")
+    games = cursor.fetchall()
+
+    # Close the connection
+    conn.close()
+
+    # Render the results in a template
+    return render_template('games.html', games=games)
 
 @app.errorhandler(404)
 def page_not_found(e):
