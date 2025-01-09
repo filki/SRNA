@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, send_file, abort
-from services.visualization_service import generate_top_authors_svg
+from services.visualization_service import generate_top_authors_svg, create_top_genres_chart, create_top_publishers_chart, create_top_developers_chart
 from services.db_service import cached_get_reviews, get_total_reviews_count, get_review_by_id, get_games_list
 import sqlite3
 
@@ -64,7 +64,14 @@ def search():
 
 @app.route('/visualizations')
 def visualizations():
-    return render_template('visualizations.html')
+    top_genres = create_top_genres_chart()
+    top_publishers = create_top_publishers_chart()
+    top_developers = create_top_developers_chart()
+    
+    return render_template('visualizations.html',
+                         top_genres=top_genres,
+                         top_publishers=top_publishers,
+                         top_developers=top_developers)
 
 @app.route('/clear-cache')
 def clear_cache():

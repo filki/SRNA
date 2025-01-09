@@ -39,71 +39,68 @@
     margin-top: 1rem;
     text-align: center;
 }
+
+.card {
+    background: rgba(24, 37, 49, 0.95);
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.text-steam {
+    color: #66c0f4;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Plotly chart adjustments */
+.js-plotly-plot .plotly .main-svg {
+    background: transparent !important;
+}
+
+.js-plotly-plot .plotly .bg {
+    fill: transparent !important;
+}
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="viz-header">
-        <h1 class="viz-title">Wizualizacje Danych</h1>
-        <p class="viz-description">Odkryj trendy i wzorce w recenzjach Steam</p>
+<div class="container-fluid mt-4">
+    <div class="text-center mb-5">
+        <h1 class="display-4 text-steam">Wizualizacje Statyczne</h1>
+        <p class="lead text-muted">Analiza trendów w recenzjach Steam</p>
     </div>
 
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="chart-container">
-                <h3 class="chart-title">
-                    <i class="fas fa-chart-pie me-2"></i>
-                    Rozkład Sentymentu
-                </h3>
-                {{ sentiment_chart | safe }}
-                <p class="chart-description">
-                    Procentowy rozkład recenzji pozytywnych i negatywnych w bazie danych
-                </p>
+    <div class="row g-4">
+        <!-- Top Genres -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    {{ top_genres | safe }}
+                </div>
             </div>
         </div>
 
-        <div class="col-md-6 mb-4">
-            <div class="chart-container">
-                <h3 class="chart-title">
-                    <i class="fas fa-clock me-2"></i>
-                    Trend Czasowy
-                </h3>
-                {{ time_chart | safe }}
-                <p class="chart-description">
-                    Liczba recenzji w czasie z podziałem na sentyment
-                </p>
+        <!-- Top Publishers -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    {{ top_publishers | safe }}
+                </div>
             </div>
         </div>
 
-       
-
-        <div class="col-md-6 mb-4">
-            <div class="chart-container">
-                <h3 class="chart-title">
-                    <i class="fas fa-gamepad me-2"></i>
-                    Statystyki Graczy
-                </h3>
-                {{ playtime_chart | safe }}
-                <p class="chart-description">
-                    Rozkład czasu gry wśród recenzentów
-                </p>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="chart-container">
-                <h3 class="chart-title">
-                    <i class="fas fa-thumbs-up me-2"></i>
-                    Użyteczność Recenzji
-                </h3>
-                {{ helpfulness_chart | safe }}
-                <p class="chart-description">
-                    Rozkład ocen użyteczności recenzji
-                </p>
+        <!-- Top Developers -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    {{ top_developers | safe }}
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -141,5 +138,4 @@
         Plotly.relayout(plot, steamTheme);
     });
 </script>
-{% endblock %}
 {% endblock %}

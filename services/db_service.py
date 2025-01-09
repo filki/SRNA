@@ -3,8 +3,9 @@ import sqlite3
 from typing import List, Dict, Any
 from .search_service import search_service
 from .text_analysis_service import text_analysis_service
+import traceback
 
-DATABASE = 'data/steam_reviews_with_authors.db'
+DATABASE = 'c:/Users/ruder/Desktop/testlokal/data/steam_reviews_with_authors.db'
 
 def format_timestamp(unix_timestamp):
     """Konwertuje znacznik czasu UNIX na czytelną datę."""
@@ -69,8 +70,10 @@ def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", fil
     
     try:
         # Execute query to get ALL matching reviews
+        print(f"Executing query: {query}")
         cur.execute(query, params)
         all_reviews = [dict(row) for row in cur.fetchall()]
+        print(f"Query returned {len(all_reviews)} results")
         print(f"Debug: Fetched {len(all_reviews)} total reviews from database")
         
         # Format timestamps and initialize relevance scores
@@ -111,6 +114,7 @@ def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", fil
         
     except sqlite3.Error as e:
         print(f"Database error: {e}")
+        traceback.print_exc()
         return []
     finally:
         cur.close()
@@ -145,10 +149,14 @@ def get_total_reviews_count(keyword: str = "", filter_option: str = "all", game_
     cur = con.cursor()
     
     try:
+        print(f"Executing query: {query}")
         cur.execute(query, params)
-        return cur.fetchone()[0]
+        result = cur.fetchone()
+        print(f"Query returned {result[0]} results")
+        return result[0]
     except sqlite3.Error as e:
         print(f"Database error: {e}")
+        traceback.print_exc()
         return 0
     finally:
         cur.close()
@@ -183,9 +191,10 @@ def get_review_by_id(review_id: int) -> Dict[str, Any]:
     cur = con.cursor()
     
     try:
+        print(f"Executing query: {query}")
         cur.execute(query, [review_id])
         result = cur.fetchone()
-        
+        print(f"Query returned {result} results")
         if result is None:
             return None
             
@@ -217,6 +226,7 @@ def get_review_by_id(review_id: int) -> Dict[str, Any]:
         
     except sqlite3.Error as e:
         print(f"Database error: {e}")
+        traceback.print_exc()
         return None
     finally:
         cur.close()
@@ -237,10 +247,14 @@ def get_games_list():
     cur = con.cursor()
     
     try:
+        print(f"Executing query: {query}")
         cur.execute(query)
-        return [{'app_id': row[0], 'name': row[1]} for row in cur.fetchall()]
+        results = [{'app_id': row[0], 'name': row[1]} for row in cur.fetchall()]
+        print(f"Query returned {len(results)} results")
+        return results
     except sqlite3.Error as e:
         print(f"Database error: {e}")
+        traceback.print_exc()
         return []
     finally:
         cur.close()
@@ -274,4 +288,113 @@ def calculate_relevance(query_text: str, reviews: List[Dict[str, Any]]) -> List[
         
     except Exception as e:
         print(f"Error calculating relevance: {e}")
+        traceback.print_exc()
         return [0.0] * len(reviews)
+
+
+# FUNKCJE DLA LLM'a w celu weryfikacji działania aplikacji
+def execute_query(query: str) -> List[Dict[str, Any]]:
+    print(f"Connecting to database at: {DATABASE}")
+    con = sqlite3.connect(DATABASE)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+    
+    try:
+        print(f"Executing query: {query}")
+        cur.execute(query)
+        results = [dict(row) for row in cur.fetchall()]
+        print(f"Query returned {len(results)} results")
+        return results
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        traceback.print_exc()
+        return []
+    finally:
+        cur.close()
+        con.close()
+
+def get_table_info():
+    con = sqlite3.connect(DATABASE)
+    cur = con.cursor()
+    try:
+        print("Getting table schema...")
+        cur.execute("SELECT * FROM reviews LIMIT 1")
+        columns = [description[0] for description in cur.description]
+        print("Table columns:", columns)
+        return columns
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        traceback.print_exc()
+        return []
+    finally:
+        cur.close()
+        con.close()
+
+def get_top_genres():
+    query = """
+    SELECT g.genre as name, COUNT(*) as review_count
+    FROM reviews r
+    JOIN games g ON r.app_id = g.app_id
+    WHERE g.genre IS NOT NULL AND g.genre != ''
+    GROUP BY g.genre
+    ORDER BY review_count DESC
+    LIMIT 10
+    """
+    result = execute_query(query)
+    print("Top Genres Data:", result)
+    return result
+
+def get_top_publishers():
+    query = """
+    SELECT g.publisher as name, COUNT(*) as review_count
+    FROM reviews r
+    JOIN games g ON r.app_id = g.app_id
+    WHERE g.publisher IS NOT NULL AND g.publisher != ''
+    GROUP BY g.publisher
+    ORDER BY review_count DESC
+    LIMIT 10
+    """
+    result = execute_query(query)
+    print("Top Publishers Data:", result)
+    return result
+
+def get_top_developers():
+    query = """
+    SELECT g.developer as name, COUNT(*) as review_count
+    FROM reviews r
+    JOIN games g ON r.app_id = g.app_id
+    WHERE g.developer IS NOT NULL AND g.developer != ''
+    GROUP BY g.developer
+    ORDER BY review_count DESC
+    LIMIT 10
+    """
+    result = execute_query(query)
+    print("Top Developers Data:", result)
+    return result
+
+def test_query():
+    con = sqlite3.connect(DATABASE)
+    cur = con.cursor()
+    try:
+        print("\nTesting simple query...")
+        cur.execute("SELECT COUNT(*) FROM reviews")
+        count = cur.fetchone()[0]
+        print(f"Total reviews in database: {count}")
+        
+        print("\nSample review data:")
+        cur.execute("SELECT * FROM reviews LIMIT 1")
+        sample = dict(zip([col[0] for col in cur.description], cur.fetchone()))
+        print(sample)
+        return count
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        traceback.print_exc()
+        return 0
+    finally:
+        cur.close()
+        con.close()
+
+# Call test query
+test_query()
+
+get_table_info()

@@ -4,6 +4,10 @@ import matplotlib
 matplotlib.use('Agg')  # Użyj backendu AGG
 import matplotlib.pyplot as plt
 from flask import Response
+from typing import Dict, List
+import plotly.express as px
+import plotly.graph_objects as go
+from services.db_service import get_top_genres, get_top_publishers, get_top_developers
 
 DATABASE = 'data/steam_reviews_with_timestamp.db'
 
@@ -47,3 +51,126 @@ def generate_top_authors_svg():
     output.close()
 
     return svg_data
+
+def create_top_genres_chart():
+    data = get_top_genres()
+    print("Creating genres chart with data:", data)
+    fig = go.Figure(data=[
+        go.Bar(
+            x=[d['name'] for d in data],
+            y=[d['review_count'] for d in data],
+            marker_color='#66c0f4',
+            hovertemplate='<b>%{x}</b><br>Liczba recenzji: %{y}<extra></extra>'
+        )
+    ])
+    fig.update_layout(
+        title={
+            'text': 'Top 10 Gatunków Gier',
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 20}
+        },
+        xaxis_title='Gatunek',
+        yaxis_title='Liczba Recenzji',
+        template='plotly_dark',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        height=400,
+        margin=dict(l=50, r=20, t=70, b=50),
+        xaxis=dict(
+            tickangle=45,
+            tickfont=dict(size=12),
+            gridcolor='rgba(255, 255, 255, 0.1)',
+            showgrid=True
+        ),
+        yaxis=dict(
+            gridcolor='rgba(255, 255, 255, 0.1)',
+            showgrid=True
+        ),
+        showlegend=False
+    )
+    return fig.to_html(full_html=False, config={'displayModeBar': False})
+
+def create_top_publishers_chart():
+    data = get_top_publishers()
+    print("Creating publishers chart with data:", data)
+    fig = go.Figure(data=[
+        go.Bar(
+            x=[d['name'] for d in data],
+            y=[d['review_count'] for d in data],
+            marker_color='#1a9fff',
+            hovertemplate='<b>%{x}</b><br>Liczba recenzji: %{y}<extra></extra>'
+        )
+    ])
+    fig.update_layout(
+        title={
+            'text': 'Top 10 Wydawców',
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 20}
+        },
+        xaxis_title='Wydawca',
+        yaxis_title='Liczba Recenzji',
+        template='plotly_dark',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        height=400,
+        margin=dict(l=50, r=20, t=70, b=50),
+        xaxis=dict(
+            tickangle=45,
+            tickfont=dict(size=12),
+            gridcolor='rgba(255, 255, 255, 0.1)',
+            showgrid=True
+        ),
+        yaxis=dict(
+            gridcolor='rgba(255, 255, 255, 0.1)',
+            showgrid=True
+        ),
+        showlegend=False
+    )
+    return fig.to_html(full_html=False, config={'displayModeBar': False})
+
+def create_top_developers_chart():
+    data = get_top_developers()
+    print("Creating developers chart with data:", data)
+    fig = go.Figure(data=[
+        go.Bar(
+            x=[d['name'] for d in data],
+            y=[d['review_count'] for d in data],
+            marker_color='#47bfff',
+            hovertemplate='<b>%{x}</b><br>Liczba recenzji: %{y}<extra></extra>'
+        )
+    ])
+    fig.update_layout(
+        title={
+            'text': 'Top 10 Deweloperów',
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 20}
+        },
+        xaxis_title='Deweloper',
+        yaxis_title='Liczba Recenzji',
+        template='plotly_dark',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        height=400,
+        margin=dict(l=50, r=20, t=70, b=50),
+        xaxis=dict(
+            tickangle=45,
+            tickfont=dict(size=12),
+            gridcolor='rgba(255, 255, 255, 0.1)',
+            showgrid=True
+        ),
+        yaxis=dict(
+            gridcolor='rgba(255, 255, 255, 0.1)',
+            showgrid=True
+        ),
+        showlegend=False
+    )
+    return fig.to_html(full_html=False, config={'displayModeBar': False})
