@@ -65,77 +65,123 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <div class="text-center mb-5">
-        <h1 class="display-4 text-steam">Wizualizacje Statyczne</h1>
-        <p class="lead text-muted">Analiza trendów w recenzjach Steam</p>
+<div class="container mt-5">
+    <h1 class="display-4 text-steam">Wizualizacje Dynamiczne</h1>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-dark text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Chmura słów z recenzji</h5>
+                    <div class="mb-3">
+                        <label for="genreSelect" class="form-label">Filtruj według gatunku:</label>
+                        <select class="form-select bg-dark text-white" id="genreSelect">
+                            <option value="">Wszystkie gatunki</option>
+                            <option value="Action">Action</option>
+                            <option value="Adventure">Adventure</option>
+                            <option value="RPG">RPG</option>
+                            <option value="Strategy">Strategy</option>
+                            <option value="Simulation">Simulation</option>
+                            <option value="Sports">Sports</option>
+                            <option value="Racing">Racing</option>
+                        </select>
+                    </div>
+                    <div class="text-center" id="wordCloudContainer">
+                        {% if word_cloud_image %}
+                        <img src="data:image/png;base64,{{ word_cloud_image }}" alt="Word Cloud" class="img-fluid" id="wordCloudImage">
+                        {% else %}
+                        <p>Brak danych do wygenerowania chmury słów.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Top Genres -->
-        <div class="col-md-4">
-            <div class="card h-100">
+    <div class="row mt-4">
+        <h1 class="display-4 text-steam">Wizualizacje Statyczne</h1>
+        <div class="col-12">
+            <div class="card bg-dark text-white">
                 <div class="card-body">
+                    <h5 class="card-title">Top Gatunki</h5>
                     {{ top_genres | safe }}
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Top Publishers -->
-        <div class="col-md-4">
-            <div class="card h-100">
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-dark text-white">
                 <div class="card-body">
+                    <h5 class="card-title">Top Wydawcy</h5>
                     {{ top_publishers | safe }}
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Top Developers -->
-        <div class="col-md-4">
-            <div class="card h-100">
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-dark text-white">
                 <div class="card-body">
+                    <h5 class="card-title">Top Deweloperzy</h5>
                     {{ top_developers | safe }}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Handle genre selection change
+    document.getElementById('genreSelect').addEventListener('change', function() {
+        const genre = this.value;
+        const wordCloudImage = document.getElementById('wordCloudImage');
+        
+        // Show loading state
+        wordCloudImage.style.opacity = '0.5';
+        
+        // Fetch new word cloud
+        fetch(`/update_word_cloud?genre=${encodeURIComponent(genre)}`)
+            .then(response => response.json())
+            .then(data => {
+                wordCloudImage.src = `data:image/png;base64,${data.word_cloud}`;
+                wordCloudImage.style.opacity = '1';
+            })
+            .catch(error => {
+                console.error('Error updating word cloud:', error);
+                wordCloudImage.style.opacity = '1';
+            });
+    });
+
+    // Apply Steam theme to all plots
+    var steamTheme = {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: {
+            color: '#c7d5e0'
+        },
+        xaxis: {
+            gridcolor: 'rgba(255, 255, 255, 0.1)',
+            zerolinecolor: 'rgba(255, 255, 255, 0.1)'
+        },
+        yaxis: {
+            gridcolor: 'rgba(255, 255, 255, 0.1)',
+            zerolinecolor: 'rgba(255, 255, 255, 0.1)'
+        }
+    };
+
+    // Get all plots on the page
+    var plots = document.querySelectorAll('.js-plotly-plot');
+
+    // Update each plot with Steam theme
+    plots.forEach(function(plot) {
+        Plotly.relayout(plot, steamTheme);
+    });
+</script>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-<script>
-    // Customize Plotly charts to match Steam theme
-    const steamTheme = {
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        font: {
-            color: '#acb2b8'
-        },
-        title: {
-            font: {
-                color: '#ffffff'
-            }
-        },
-        xaxis: {
-            gridcolor: 'rgba(255,255,255,0.1)',
-            zerolinecolor: 'rgba(255,255,255,0.1)',
-            tickfont: {
-                color: '#acb2b8'
-            }
-        },
-        yaxis: {
-            gridcolor: 'rgba(255,255,255,0.1)',
-            zerolinecolor: 'rgba(255,255,255,0.1)',
-            tickfont: {
-                color: '#acb2b8'
-            }
-        }
-    };
-
-    // Apply theme to all Plotly charts
-    document.querySelectorAll('[id^="plotly"]').forEach(plot => {
-        Plotly.relayout(plot, steamTheme);
-    });
-</script>
 {% endblock %}

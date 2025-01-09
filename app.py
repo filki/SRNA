@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, send_file, abort
-from services.visualization_service import generate_top_authors_svg, create_top_genres_chart, create_top_publishers_chart, create_top_developers_chart
+from flask import Flask, render_template, request, send_file, abort, jsonify
+from services.visualization_service import generate_top_authors_svg, create_top_genres_chart, create_top_publishers_chart, create_top_developers_chart, VisualizationService
 from services.db_service import cached_get_reviews, get_total_reviews_count, get_review_by_id, get_games_list
 import sqlite3
 
 app = Flask(__name__)
+visualizer = VisualizationService()
 
 # Add built-in functions to Jinja2 context
 app.jinja_env.globals.update(
@@ -68,10 +69,25 @@ def visualizations():
     top_publishers = create_top_publishers_chart()
     top_developers = create_top_developers_chart()
     
+    # Generate word cloud from all reviews
+    word_cloud = visualizer.generate_word_cloud(visualizer.get_all_reviews_text())
+    
     return render_template('visualizations.html',
                          top_genres=top_genres,
                          top_publishers=top_publishers,
-                         top_developers=top_developers)
+                         top_developers=top_developers,
+                         word_cloud_image=word_cloud)
+
+@app.route('/update_word_cloud')
+def update_word_cloud():
+    genre = request.args.get('genre', '')
+    if genre:
+        text = visualizer.get_reviews_text_by_genre(genre)
+    else:
+        text = visualizer.get_all_reviews_text()
+    
+    word_cloud = visualizer.generate_word_cloud(text)
+    return jsonify({'word_cloud': word_cloud})
 
 @app.route('/clear-cache')
 def clear_cache():

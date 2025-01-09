@@ -5,7 +5,7 @@ from .search_service import search_service
 from .text_analysis_service import text_analysis_service
 import traceback
 
-DATABASE = 'c:/Users/ruder/Desktop/testlokal/data/steam_reviews_with_authors.db'
+DATABASE = 'data/steam_reviews_with_authors.db'
 
 def format_timestamp(unix_timestamp):
     """Konwertuje znacznik czasu UNIX na czytelną datę."""
