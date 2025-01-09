@@ -66,7 +66,7 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="display-4 text-steam">Wizualizacje Dynamiczne</h1>
+    <h1 class="display-4 text-steam">Chmura słów</h1>
     
     <div class="row mt-4">
         <div class="col-12">
@@ -96,6 +96,63 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="row mt-4">
+        <h1 class="display-4 text-steam">Analiza Klastrów</h1>
+        {% for stat in cluster_stats %}
+        <div class="col-md-6 mb-4">
+            <div class="card bg-dark text-white h-100">
+                <div class="card-body">
+                    <h3 class="card-title d-flex justify-content-between align-items-center">
+                        Klaster {{ stat.cluster_id + 1 }}
+                        <span class="badge bg-primary">{{ stat.size }} recenzji</span>
+                    </h3>
+                    
+                    <!-- Top Terms -->
+                    <div class="mb-3">
+                        <h5>Najczęstsze słowa:</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for term in stat.top_terms %}
+                            <span class="badge bg-info">{{ term }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Top Genres -->
+                    <div class="mb-3">
+                        <h5>Dominujące gatunki:</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for genre, count in stat.top_genres.items() %}
+                            <span class="badge bg-success">{{ genre }}: {{ count }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Sample Reviews Button -->
+                    <button class="btn btn-outline-light btn-sm" type="button" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#cluster-{{ stat.cluster_id }}-reviews"
+                            aria-expanded="false"
+                            aria-controls="cluster-{{ stat.cluster_id }}-reviews">
+                        Pokaż przykładowe recenzje
+                    </button>
+                    
+                    <!-- Sample Reviews Collapse -->
+                    <div class="collapse mt-3" id="cluster-{{ stat.cluster_id }}-reviews">
+                        {% for review in stat.sample_reviews %}
+                        <div class="card bg-dark-secondary mb-2">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">{{ review.game_title }}</h6>
+                                <p class="card-text text-white">{{ review.content }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
     </div>
 
     <div class="row mt-4">
@@ -133,55 +190,64 @@
     </div>
 </div>
 
-<script>
-    // Handle genre selection change
-    document.getElementById('genreSelect').addEventListener('change', function() {
-        const genre = this.value;
-        const wordCloudImage = document.getElementById('wordCloudImage');
-        
-        // Show loading state
-        wordCloudImage.style.opacity = '0.5';
-        
-        // Fetch new word cloud
-        fetch(`/update_word_cloud?genre=${encodeURIComponent(genre)}`)
-            .then(response => response.json())
-            .then(data => {
-                wordCloudImage.src = `data:image/png;base64,${data.word_cloud}`;
-                wordCloudImage.style.opacity = '1';
-            })
-            .catch(error => {
-                console.error('Error updating word cloud:', error);
-                wordCloudImage.style.opacity = '1';
-            });
-    });
-
-    // Apply Steam theme to all plots
-    var steamTheme = {
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        font: {
-            color: '#c7d5e0'
-        },
-        xaxis: {
-            gridcolor: 'rgba(255, 255, 255, 0.1)',
-            zerolinecolor: 'rgba(255, 255, 255, 0.1)'
-        },
-        yaxis: {
-            gridcolor: 'rgba(255, 255, 255, 0.1)',
-            zerolinecolor: 'rgba(255, 255, 255, 0.1)'
-        }
-    };
-
-    // Get all plots on the page
-    var plots = document.querySelectorAll('.js-plotly-plot');
-
-    // Update each plot with Steam theme
-    plots.forEach(function(plot) {
-        Plotly.relayout(plot, steamTheme);
-    });
-</script>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all collapse elements
+        var collapseElements = [].slice.call(document.querySelectorAll('.collapse'));
+        collapseElements.map(function(collapseEl) {
+            return new bootstrap.Collapse(collapseEl, {
+                toggle: false
+            });
+        });
+
+        // Handle genre selection change
+        document.getElementById('genreSelect').addEventListener('change', function() {
+            const genre = this.value;
+            const wordCloudImage = document.getElementById('wordCloudImage');
+            const loadingMessage = document.createElement('p');
+            loadingMessage.textContent = 'Generowanie chmury słów...';
+            
+            // Show loading state
+            wordCloudImage.style.opacity = '0.5';
+            wordCloudImage.parentNode.insertBefore(loadingMessage, wordCloudImage.nextSibling);
+            
+            // Fetch new word cloud
+            fetch(`/update_word_cloud?genre=${encodeURIComponent(genre)}`)
+                .then(response => response.json())
+                .then(data => {
+                    wordCloudImage.src = `data:image/png;base64,${data.word_cloud}`;
+                    wordCloudImage.style.opacity = '1';
+                    loadingMessage.remove();
+                })
+                
+        });
+
+        // Apply Steam theme to all plots
+        var steamTheme = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {
+                color: '#c7d5e0'
+            },
+            xaxis: {
+                gridcolor: 'rgba(255, 255, 255, 0.1)',
+                zerolinecolor: 'rgba(255, 255, 255, 0.1)'
+            },
+            yaxis: {
+                gridcolor: 'rgba(255, 255, 255, 0.1)',
+                zerolinecolor: 'rgba(255, 255, 255, 0.1)'
+            }
+        };
+
+        // Update each plot with Steam theme
+        var plots = document.querySelectorAll('.js-plotly-plot');
+        plots.forEach(function(plot) {
+            Plotly.relayout(plot, steamTheme);
+        });
+    });
+</script>
 {% endblock %}

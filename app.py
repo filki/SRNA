@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, send_file, abort, jsonify
 from services.visualization_service import generate_top_authors_svg, create_top_genres_chart, create_top_publishers_chart, create_top_developers_chart, VisualizationService
-from services.db_service import cached_get_reviews, get_total_reviews_count, get_review_by_id, get_games_list
+from services.db_service import cached_get_reviews, get_total_reviews_count, get_review_by_id, get_games_list, get_unique_genres
+from services.clustering_service import clustering_service
 import sqlite3
 
 app = Flask(__name__)
@@ -69,14 +70,24 @@ def visualizations():
     top_publishers = create_top_publishers_chart()
     top_developers = create_top_developers_chart()
     
+    # Get unique genres for the filter dropdown
+    genres = get_unique_genres()
+    
     # Generate word cloud from all reviews
     word_cloud = visualizer.generate_word_cloud(visualizer.get_all_reviews_text())
+    
+    # Get cluster statistics
+    if clustering_service.vectors is None:
+        clustering_service.perform_clustering(limit=1000)
+    cluster_stats = clustering_service.get_cluster_statistics()
     
     return render_template('visualizations.html',
                          top_genres=top_genres,
                          top_publishers=top_publishers,
                          top_developers=top_developers,
-                         word_cloud_image=word_cloud)
+                         word_cloud_image=word_cloud,
+                         genres=genres,
+                         cluster_stats=cluster_stats)
 
 @app.route('/update_word_cloud')
 def update_word_cloud():
@@ -177,6 +188,18 @@ def show_games():
                              'languages': language_filter,
                              'genre': genre_filter
                          })
+
+@app.route('/clustering')
+def show_clusters():
+    # Perform clustering if not already done
+    if clustering_service.vectors is None:
+        clustering_service.perform_clustering(limit=1000)
+    
+    # Get cluster statistics
+    cluster_stats = clustering_service.get_cluster_statistics()
+    
+    return render_template('clustering.html', 
+                         cluster_stats=cluster_stats)
 
 @app.errorhandler(404)
 def page_not_found(e):

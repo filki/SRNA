@@ -107,6 +107,49 @@
             border-color: #66c0f4;
             color: #ffffff;
         }
+        .text-steam {
+            color: #66c0f4;
+        }
+        .bg-dark {
+            background-color: #171a21 !important;
+        }
+        .bg-dark-secondary {
+            background-color: #1b2838 !important;
+        }
+        .card {
+            border: 1px solid #2a475e;
+        }
+        .badge {
+            font-size: 0.9em;
+            padding: 0.4em 0.8em;
+        }
+        .badge.bg-info {
+            background-color: #66c0f4 !important;
+        }
+        .badge.bg-success {
+            background-color: #5c7e10 !important;
+        }
+        .btn-outline-light:hover {
+            background-color: #2a475e;
+        }
+        .collapse {
+            transition: all 0.2s ease;
+        }
+        .card-text {
+            white-space: pre-line;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .card-text::-webkit-scrollbar {
+            width: 8px;
+        }
+        .card-text::-webkit-scrollbar-track {
+            background: #171a21;
+        }
+        .card-text::-webkit-scrollbar-thumb {
+            background: #2a475e;
+            border-radius: 4px;
+        }
         {% block additional_styles %}{% endblock %}
     </style>
     {% block extra_head %}{% endblock %}

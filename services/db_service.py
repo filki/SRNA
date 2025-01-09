@@ -372,6 +372,15 @@ def get_top_developers():
     print("Top Developers Data:", result)
     return result
 
+def get_unique_genres():
+    """Get list of unique genres from the database."""
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT DISTINCT genre FROM games WHERE genre IS NOT NULL ORDER BY genre")
+    genres = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return genres
+
 def test_query():
     con = sqlite3.connect(DATABASE)
     cur = con.cursor()
