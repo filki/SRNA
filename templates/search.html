@@ -51,6 +51,58 @@
     margin-bottom: 2rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
+.game-select-container {
+    position: relative;
+    width: 100%;
+}
+.game-select-input {
+    width: 100%;
+    padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+    background-color: #1b2838;
+    color: #c7d5e0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+.game-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #1b2838;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    z-index: 1000;
+    display: none;
+}
+.game-select-dropdown.show {
+    display: block;
+}
+.game-option {
+    padding: 0.5rem;
+    cursor: pointer;
+    color: #c7d5e0;
+}
+.game-option:hover {
+    background-color: #2a475e;
+}
+.selected-game-info {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(102, 192, 244, 0.2);
+}
+.selected-game-info .btn-outline-danger {
+    border-color: #ff4444;
+    color: #ff4444;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+.selected-game-info .btn-outline-danger:hover {
+    background-color: #ff4444;
+    color: white;
+}
 {% endblock %}
 
 {% block content %}
@@ -70,18 +122,36 @@
                     <input type="text" class="form-control" name="keyword" placeholder="Wpisz słowo kluczowe..." value="{{ keyword if keyword }}">
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select class="form-select" name="filter_option">
                     <option value="all" {% if filter_option == 'all' %}selected{% endif %}>Wszystkie recenzje</option>
                     <option value="positive" {% if filter_option == 'positive' %}selected{% endif %}>Tylko pozytywne</option>
                     <option value="negative" {% if filter_option == 'negative' %}selected{% endif %}>Tylko negatywne</option>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select class="form-select" name="scoring_method">
                     <option value="tfidf" {% if scoring_method == 'tfidf' %}selected{% endif %}>TF-IDF</option>
                     <option value="jaccard" {% if scoring_method == 'jaccard' %}selected{% endif %}>Jaccard</option>
                 </select>
+            </div>
+            <div class="col-md-2">
+                <div class="game-select-container">
+                    <input type="hidden" name="game_id" id="selected_game_id" value="{{ selected_game }}">
+                    <input type="text" 
+                           class="game-select-input" 
+                           id="game_search" 
+                           placeholder="Wybierz grę..."
+                           autocomplete="off"
+                           value="{{ games_list | selectattr('app_id', 'equalto', selected_game) | map(attribute='name') | first | default('') }}">
+                    <div class="game-select-dropdown" id="games_dropdown">
+                        {% for game in games_list %}
+                            <div class="game-option" data-game-id="{{ game.app_id }}" data-game-name="{{ game.name }}">
+                                {{ game.name }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
             <div class="col-12 text-center">
                 <button type="submit" class="btn btn-steam">
@@ -92,6 +162,20 @@
     </div>
 
     {% if reviews %}
+        {% if selected_game %}
+            {% set game_name = games_list | selectattr('app_id', 'equalto', selected_game | int) | map(attribute='name') | first %}
+            <div class="selected-game-info mb-4 text-center">
+                <h4 class="mb-3">
+                    <i class="fas fa-gamepad me-2"></i>
+                    Recenzje gry: <span style="color: #66c0f4;">{{ game_name }}</span>
+                    <a href="{{ url_for('search', keyword=keyword, filter_option=filter_option, scoring_method=scoring_method) }}" 
+                       class="btn btn-sm btn-outline-danger ms-3" 
+                       title="Usuń filtr gry">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </h4>
+            </div>
+        {% endif %}
         <div class="reviews-section">
             {% for review in reviews %}
                 <div class="card review-card">
@@ -136,7 +220,7 @@
                 <ul class="pagination justify-content-center">
                     {% if page > 1 %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('search', page=page-1, keyword=keyword, filter_option=filter_option, scoring_method=scoring_method) }}">
+                            <a class="page-link" href="{{ url_for('search', page=page-1, keyword=keyword, filter_option=filter_option, scoring_method=scoring_method, game_id=selected_game) }}">
                                 <i class="fas fa-chevron-left"></i>
                             </a>
                         </li>
@@ -144,13 +228,13 @@
                     
                     {% for p in range(max(1, page-2), min(total_pages+1, page+3)) %}
                         <li class="page-item {{ 'active' if p == page else '' }}">
-                            <a class="page-link" href="{{ url_for('search', page=p, keyword=keyword, filter_option=filter_option, scoring_method=scoring_method) }}">{{ p }}</a>
+                            <a class="page-link" href="{{ url_for('search', page=p, keyword=keyword, filter_option=filter_option, scoring_method=scoring_method, game_id=selected_game) }}">{{ p }}</a>
                         </li>
                     {% endfor %}
                     
                     {% if page < total_pages %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('search', page=page+1, keyword=keyword, filter_option=filter_option, scoring_method=scoring_method) }}">
+                            <a class="page-link" href="{{ url_for('search', page=page+1, keyword=keyword, filter_option=filter_option, scoring_method=scoring_method, game_id=selected_game) }}">
                                 <i class="fas fa-chevron-right"></i>
                             </a>
                         </li>
@@ -168,4 +252,47 @@
         </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const gameSearch = document.getElementById('game_search');
+    const gamesDropdown = document.getElementById('games_dropdown');
+    const gameOptions = document.querySelectorAll('.game-option');
+    const selectedGameId = document.getElementById('selected_game_id');
+
+    // Show/hide dropdown
+    gameSearch.addEventListener('focus', () => {
+        gamesDropdown.classList.add('show');
+    });
+
+    // Filter games as user types
+    gameSearch.addEventListener('input', () => {
+        const searchValue = gameSearch.value.toLowerCase();
+        gameOptions.forEach(option => {
+            const gameName = option.getAttribute('data-game-name').toLowerCase();
+            option.style.display = gameName.includes(searchValue) ? 'block' : 'none';
+        });
+    });
+
+    // Handle game selection
+    gameOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            const gameId = option.getAttribute('data-game-id');
+            const gameName = option.getAttribute('data-game-name');
+            gameSearch.value = gameName;
+            selectedGameId.value = gameId;
+            gamesDropdown.classList.remove('show');
+        });
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.game-select-container')) {
+            gamesDropdown.classList.remove('show');
+        }
+    });
+});
+</script>
 {% endblock %}

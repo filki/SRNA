@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, send_file, abort
 from services.visualization_service import generate_top_authors_svg
-from services.db_service import cached_get_reviews, get_total_reviews_count, get_review_by_id
+from services.db_service import cached_get_reviews, get_total_reviews_count, get_review_by_id, get_games_list
 import sqlite3
 
 app = Flask(__name__)
@@ -21,47 +21,50 @@ def index():
 def search():
     keyword = request.args.get('keyword', '')
     filter_option = request.args.get('filter_option', 'all')
-    scoring_method = request.args.get('scoring_method', 'tfidf')  # Default to TF-IDF
+    scoring_method = request.args.get('scoring_method', 'tfidf')
+    selected_game = request.args.get('game_id', '')
     page = request.args.get('page', 1, type=int)
-    per_page = 20
-
-    # Get total count first
-    total_reviews = get_total_reviews_count(keyword, filter_option)
-    total_pages = (total_reviews + per_page - 1) // per_page
-
-    # Ensure page is within bounds
-    page = min(max(1, page), total_pages if total_pages > 0 else 1)
-
-    # Get globally sorted and paginated reviews
+    
+    # Get all games for the dropdown
+    games_list = get_games_list()
+    
+    # Get reviews with all filters
     reviews = cached_get_reviews(
         page=page,
-        per_page=per_page,
         keyword=keyword,
         filter_option=filter_option,
-        scoring_method=scoring_method
+        scoring_method=scoring_method,
+        game_id=selected_game
     )
-
+    
+    # Get total count with all filters
+    total_reviews = get_total_reviews_count(
+        keyword=keyword,
+        filter_option=filter_option,
+        game_id=selected_game
+    )
+    
+    total_pages = (total_reviews + 19) // 20  # 20 reviews per page
+    
     scoring_methods = [
         {'id': 'tfidf', 'name': 'TF-IDF', 'description': 'Zaawansowane wyszukiwanie uwzględniające częstość słów'},
         {'id': 'jaccard', 'name': 'Jaccard', 'description': 'Proste porównanie na podstawie wspólnych słów'}
     ]
-
-    return render_template(
-        'search.html',
-        reviews=reviews,
-        page=page,
-        total_pages=total_pages,
-        filter_option=filter_option,
-        keyword=keyword,
-        total_results=total_reviews,
-        scoring_methods=scoring_methods,
-        scoring_method=scoring_method
-    )
+    
+    return render_template('search.html',
+                         reviews=reviews,
+                         keyword=keyword,
+                         filter_option=filter_option,
+                         scoring_method=scoring_method,
+                         page=page,
+                         total_pages=total_pages,
+                         games_list=games_list,
+                         selected_game=selected_game,
+                         scoring_methods=scoring_methods)
 
 @app.route('/visualizations')
 def visualizations():
     return render_template('visualizations.html')
-
 
 @app.route('/clear-cache')
 def clear_cache():

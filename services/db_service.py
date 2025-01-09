@@ -10,7 +10,7 @@ def format_timestamp(unix_timestamp):
     """Konwertuje znacznik czasu UNIX na czytelną datę."""
     return datetime.utcfromtimestamp(unix_timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
-def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", filter_option: str = "all", scoring_method: str = "tfidf") -> List[Dict[str, Any]]:
+def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", filter_option: str = "all", scoring_method: str = "tfidf", game_id: str = "") -> List[Dict[str, Any]]:
     """
     Pobiera recenzje z bazy danych z uwzględnieniem filtrów i wyszukiwania.
     Teraz pobiera WSZYSTKIE pasujące recenzje, sortuje je globalnie według wybranej metody,
@@ -20,7 +20,7 @@ def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", fil
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
     
-    print(f"\nDebug: Starting review fetch with keyword: '{keyword}', filter: {filter_option}, scoring: {scoring_method}")
+    print(f"\nDebug: Starting review fetch with keyword: '{keyword}', filter: {filter_option}, scoring: {scoring_method}, game_id: {game_id}")
     
     # Base query with all necessary fields - NO LIMIT/OFFSET
     query = """
@@ -43,6 +43,11 @@ def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", fil
         query += " AND r.is_positive = 'Positive'"
     elif filter_option == "negative":
         query += " AND r.is_positive != 'Positive'"
+
+    # Add game filter if provided
+    if game_id:
+        query += " AND r.app_id = ?"
+        params.append(int(game_id))
 
     # If keyword provided, use LIKE for initial filtering
     if keyword:
@@ -105,21 +110,30 @@ def cached_get_reviews(page: int = 1, per_page: int = 20, keyword: str = "", fil
         cur.close()
         con.close()
 
-def get_total_reviews_count(keyword: str = "", filter_option: str = "all") -> int:
+def get_total_reviews_count(keyword: str = "", filter_option: str = "all", game_id: str = "") -> int:
     """
-    Zwraca całkowitą liczbę recenzji w bazie danych.
+    Zwraca całkowitą liczbę recenzji w bazie danych z uwzględnieniem wszystkich filtrów.
     """
-    query = "SELECT COUNT(*) FROM reviews WHERE 1=1"
+    query = """
+        SELECT COUNT(*)
+        FROM reviews r
+        LEFT JOIN games g ON r.app_id = g.app_id
+        WHERE 1=1
+    """
     params = []
     
     if keyword:
-        query += " AND content LIKE ?"
+        query += " AND r.content LIKE ?"
         params.append(f"%{keyword}%")
         
     if filter_option == "positive":
-        query += " AND is_positive = 'Positive'"
+        query += " AND r.is_positive = 'Positive'"
     elif filter_option == "negative":
-        query += " AND is_positive != 'Positive'"
+        query += " AND r.is_positive != 'Positive'"
+        
+    if game_id:
+        query += " AND r.app_id = ?"
+        params.append(int(game_id))
     
     con = sqlite3.connect(DATABASE)
     cur = con.cursor()
@@ -192,6 +206,30 @@ def get_review_by_id(review_id: int) -> Dict[str, Any]:
     except sqlite3.Error as e:
         print(f"Database error: {e}")
         return None
+    finally:
+        cur.close()
+        con.close()
+
+def get_games_list():
+    """
+    Returns a list of all games with their app_ids and names.
+    """
+    query = """
+        SELECT DISTINCT app_id, name
+        FROM games
+        WHERE name IS NOT NULL
+        ORDER BY name
+    """
+    
+    con = sqlite3.connect(DATABASE)
+    cur = con.cursor()
+    
+    try:
+        cur.execute(query)
+        return [{'app_id': row[0], 'name': row[1]} for row in cur.fetchall()]
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return []
     finally:
         cur.close()
         con.close()
