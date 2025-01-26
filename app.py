@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, send_file, abort, jsonify
 from services.visualization_service import generate_top_authors_svg, create_top_genres_chart, create_top_publishers_chart, create_top_developers_chart, VisualizationService
 from services.db_service import cached_get_reviews, get_total_reviews_count, get_review_by_id, get_games_list, get_unique_genres
+from services.text_analysis_service import TextAnalysisService
 import sqlite3
 
 app = Flask(__name__)
 visualizer = VisualizationService()
+text_analysis_service = TextAnalysisService()
 
 # Add built-in functions to Jinja2 context
 app.jinja_env.globals.update(
@@ -48,12 +50,17 @@ def search():
         date_to=date_to,
         min_playtime=min_playtime,
         min_funny=min_funny,
-        received_free=received_free if 'received_free' in request.args else None,
-        early_access=early_access if 'early_access' in request.args else None
+        received_free=received_free,
+        early_access=early_access
     )
     
-    # Get total count for pagination
-    total_count = get_total_reviews_count(
+    # Add text analysis including named entities for each review
+    for review in reviews:
+        if 'content' in review:
+            review['analysis'] = text_analysis_service.analyze_text(review['content'])
+    
+    # Calculate total pages
+    total_reviews = get_total_reviews_count(
         keyword=keyword,
         filter_option=filter_option,
         game_id=selected_game,
@@ -61,11 +68,12 @@ def search():
         date_to=date_to,
         min_playtime=min_playtime,
         min_funny=min_funny,
-        received_free=received_free if 'received_free' in request.args else None,
-        early_access=early_access if 'early_access' in request.args else None
+        received_free=received_free,
+        early_access=early_access
     )
     
-    total_pages = (total_count + 19) // 20  # 20 reviews per page
+    per_page = 20
+    total_pages = (total_reviews + per_page - 1) // per_page
     
     scoring_methods = [
         {'id': 'tfidf', 'name': 'TF-IDF', 'description': 'Zaawansowane wyszukiwanie uwzględniające częstość słów'},
@@ -76,13 +84,21 @@ def search():
     
     return render_template('search.html',
                          reviews=reviews,
-                         keyword=keyword,
-                         filter_option=filter_option,
-                         scoring_method=scoring_method,
-                         page=page,
+                         games=games_list,
+                         current_page=page,
                          total_pages=total_pages,
-                         games_list=games_list,
-                         selected_game=selected_game,
+                         search_params={
+                             'keyword': keyword,
+                             'filter_option': filter_option,
+                             'scoring_method': scoring_method,
+                             'game_id': selected_game,
+                             'date_from': date_from,
+                             'date_to': date_to,
+                             'min_playtime': min_playtime,
+                             'min_funny': min_funny,
+                             'received_free': received_free,
+                             'early_access': early_access
+                         },
                          scoring_methods=scoring_methods)
 
 @app.route('/visualizations')

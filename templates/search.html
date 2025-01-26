@@ -125,6 +125,36 @@
     background-color: #ff4444;
     color: white;
 }
+
+/* Named Entities Styles */
+.named-entities {
+    background: rgba(102, 192, 244, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+}
+.entity-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+.entity-group .badge {
+    font-size: 0.8rem;
+    padding: 0.4em 0.8em;
+}
+.entity-group .badge.bg-info {
+    background-color: rgba(102, 192, 244, 0.2) !important;
+    color: #66c0f4;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.entity-group .badge.bg-info:hover {
+    background-color: rgba(102, 192, 244, 0.3) !important;
+}
+.entity-group .badge.bg-secondary {
+    background-color: rgba(172, 178, 184, 0.2) !important;
+    color: #acb2b8;
+}
 {% endblock %}
 
 {% block content %}
@@ -324,6 +354,29 @@
                             </a>
                         </div>
                         <p class="review-content">{{ review.content[:300] }}{% if review.content|length > 300 %}...{% endif %}</p>
+                        
+                        <!-- Named Entities Section -->
+                        {% if review.analysis and review.analysis.named_entities %}
+                        <div class="named-entities mt-3">
+                            <small class="text-muted mb-2 d-block">Wykryte encje:</small>
+                            {% for entity_type, entities in review.analysis.named_entities.items() %}
+                                {% if entities %}
+                                <div class="entity-group mb-2">
+                                    <span class="badge bg-secondary me-2">{{ entity_type }}:</span>
+                                    {% for entity in entities %}
+                                    <span class="badge bg-info me-1" 
+                                          data-bs-toggle="tooltip" 
+                                          data-bs-placement="top" 
+                                          title="{{ entity.sentence }}">
+                                        {{ entity.text }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
                         <div class="review-metadata mt-3">
                             <i class="fas fa-gamepad me-1"></i> Gry: {{ review.author.games_owned }}
                             <span class="ms-3"><i class="fas fa-pencil-alt me-1"></i> Recenzje: {{ review.author.total_reviews }}</span>
@@ -337,23 +390,23 @@
         {% if total_pages > 1 %}
             <nav aria-label="Page navigation" class="mt-4">
                 <ul class="pagination justify-content-center">
-                    {% if page > 1 %}
+                    {% if current_page > 1 %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('search', page=page-1, keyword=request.args.get('keyword', ''), filter_option=request.args.get('filter_option', ''), scoring_method=request.args.get('scoring_method', ''), game_id=request.args.get('game_id', '')) }}">
+                            <a class="page-link" href="{{ url_for('search', page=current_page-1, keyword=search_params.keyword, filter_option=search_params.filter_option, scoring_method=search_params.scoring_method, game_id=search_params.game_id, date_from=search_params.date_from, date_to=search_params.date_to, min_playtime=search_params.min_playtime, min_funny=search_params.min_funny, received_free=search_params.received_free, early_access=search_params.early_access) }}">
                                 <i class="fas fa-chevron-left"></i>
                             </a>
                         </li>
                     {% endif %}
                     
-                    {% for p in range(max(1, page-2), min(total_pages+1, page+3)) %}
-                        <li class="page-item {{ 'active' if p == page else '' }}">
-                            <a class="page-link" href="{{ url_for('search', page=p, keyword=request.args.get('keyword', ''), filter_option=request.args.get('filter_option', ''), scoring_method=request.args.get('scoring_method', ''), game_id=request.args.get('game_id', '')) }}">{{ p }}</a>
+                    {% for p in range(max(1, current_page-2), min(total_pages+1, current_page+3)) %}
+                        <li class="page-item {{ 'active' if p == current_page else '' }}">
+                            <a class="page-link" href="{{ url_for('search', page=p, keyword=search_params.keyword, filter_option=search_params.filter_option, scoring_method=search_params.scoring_method, game_id=search_params.game_id, date_from=search_params.date_from, date_to=search_params.date_to, min_playtime=search_params.min_playtime, min_funny=search_params.min_funny, received_free=search_params.received_free, early_access=search_params.early_access) }}">{{ p }}</a>
                         </li>
                     {% endfor %}
                     
-                    {% if page < total_pages %}
+                    {% if current_page < total_pages %}
                         <li class="page-item">
-                            <a class="page-link" href="{{ url_for('search', page=page+1, keyword=request.args.get('keyword', ''), filter_option=request.args.get('filter_option', ''), scoring_method=request.args.get('scoring_method', ''), game_id=request.args.get('game_id', '')) }}">
+                            <a class="page-link" href="{{ url_for('search', page=current_page+1, keyword=search_params.keyword, filter_option=search_params.filter_option, scoring_method=search_params.scoring_method, game_id=search_params.game_id, date_from=search_params.date_from, date_to=search_params.date_to, min_playtime=search_params.min_playtime, min_funny=search_params.min_funny, received_free=search_params.received_free, early_access=search_params.early_access) }}">
                                 <i class="fas fa-chevron-right"></i>
                             </a>
                         </li>
@@ -376,6 +429,12 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
     const gameSearch = document.getElementById('game_search');
     const gamesDropdown = document.getElementById('games_dropdown');
     const gameOptions = document.querySelectorAll('.game-option');

@@ -2,6 +2,7 @@ import re
 import spacy
 from typing import Dict, Any
 from textblob import TextBlob
+from collections import Counter
 
 class TextAnalysisService:
     def __init__(self):
@@ -83,8 +84,65 @@ class TextAnalysisService:
             }
         }
 
+    def extract_named_entities(self, text: str) -> Dict[str, list]:
+        """
+        Extract named entities from text using spaCy.
+        Returns a dictionary with entity types as keys and lists of entities as values.
+        """
+        doc = self.nlp(text)
+        entities = {}
+        
+        for ent in doc.ents:
+            # Convert spaCy labels to more readable names
+            label = {
+                'PERSON': 'Osoby',
+                'ORG': 'Organizacje',
+                'GPE': 'Lokalizacje',
+                'PRODUCT': 'Produkty',
+                'DATE': 'Daty',
+                'MONEY': 'Kwoty',
+                'GAME': 'Gry',
+                'DEVELOPER': 'Deweloperzy'
+            }.get(ent.label_, ent.label_)
+            
+            if label not in entities:
+                entities[label] = []
+            
+            # Add entity text and its position
+            entities[label].append({
+                'text': ent.text,
+                'start': ent.start_char,
+                'end': ent.end_char,
+                'sentence': ent.sent.text.strip()
+            })
+        
+        # Add gaming-specific entity extraction
+        game_patterns = [
+            r'(?i)\b(steam|valve|epic games|gog|origin)\b',  # Gaming platforms
+            r'(?i)\b(dlc|expansion|patch|update)\b',         # Gaming terms
+            r'(?i)\b(fps|rpg|mmo|rts|moba)\b',              # Game genres
+            r'\$\d+(?:\.\d{2})?|\d+(?:\.\d{2})?\$',         # Price patterns
+            r'v\d+\.\d+(?:\.\d+)?'                          # Version numbers
+        ]
+        
+        # Add custom gaming entities
+        for pattern in game_patterns:
+            matches = re.finditer(pattern, text, re.IGNORECASE)
+            for match in matches:
+                label = 'GAMING_TERM'
+                if label not in entities:
+                    entities[label] = []
+                entities[label].append({
+                    'text': match.group(),
+                    'start': match.start(),
+                    'end': match.end(),
+                    'sentence': text[max(0, match.start()-50):min(len(text), match.end()+50)].strip()
+                })
+        
+        return entities
+
     def analyze_text(self, text: str) -> Dict[str, Any]:
-        """Perform text analysis including morphological analysis using spaCy."""
+        """Perform comprehensive text analysis including NER"""
         if not text:
             return {
                 'word_count': 0,
@@ -100,6 +158,7 @@ class TextAnalysisService:
                     'dep_counts': {},
                     'total_tokens': 0
                 },
+                'named_entities': {},
                 'sentiment': {
                     'polarity': 0,
                     'subjectivity': 0,
@@ -107,73 +166,44 @@ class TextAnalysisService:
                 }
             }
 
-        # Basic text analysis
-        words = re.findall(r'\b\w+\b', text.lower())
-        sentences = re.split(r'[.!?]+', text)
-        sentences = [s.strip() for s in sentences if s.strip()]
+        doc = self.nlp(text)
         
-        # Count special characters
-        total_chars = len(text)
-        special_chars = len(re.findall(r'[^a-zA-Z0-9\s]', text))
+        # Basic statistics
+        words = [token.text for token in doc if not token.is_punct and not token.is_space]
+        sentences = list(doc.sents)
         
-        # Count words in ALL CAPS (excluding single letters)
-        caps_words = len(re.findall(r'\b[A-Z]{2,}+\b', text))
-        
-        # Calculate basic metrics
-        word_count = len(words)
-        unique_words = len(set(words))
-        avg_word_length = sum(len(word) for word in words) / word_count if word_count > 0 else 0
-        sentence_count = len(sentences)
-        avg_sentence_length = word_count / sentence_count if sentence_count > 0 else 0
-        special_chars_percent = (special_chars / total_chars * 100) if total_chars > 0 else 0
-
-        # Perform sentiment analysis
-        sentiment = self.analyze_sentiment(text)
-
-        # Perform morphological analysis using spaCy
-        morphological_analysis = []
-        pos_counts = {}
-        dep_counts = {}
-        total_tokens = 0
-
-        try:
-            doc = self.nlp(text[:5000])  # Limit text length to avoid memory issues
-            for token in doc:
-                if not token.is_punct and not token.is_space:
-                    total_tokens += 1
-                    pos_counts[token.pos_] = pos_counts.get(token.pos_, 0) + 1
-                    dep_counts[token.dep_] = dep_counts.get(token.dep_, 0) + 1
-                    
-                    morphological_analysis.append({
-                        'text': token.text,
-                        'lemma': token.lemma_,
-                        'pos': self._get_pos_description(token.pos_),
-                        'tag': token.tag_,
-                        'dep': self._get_dep_description(token.dep_)
-                    })
-        except Exception as e:
-            print(f"Warning: Error during morphological analysis: {e}")
-            morphological_analysis = []
-            pos_counts = {}
-            dep_counts = {}
-            total_tokens = 0
-
-        return {
-            'word_count': word_count,
-            'avg_word_length': round(avg_word_length, 1),
-            'sentence_count': sentence_count,
-            'avg_sentence_length': round(avg_sentence_length, 1),
-            'unique_words': unique_words,
-            'special_chars_percent': round(special_chars_percent, 1),
-            'caps_words_count': caps_words,
-            'morphological_analysis': morphological_analysis[:50],  # Limit to first 50 tokens
+        analysis = {
+            'word_count': len(words),
+            'avg_word_length': sum(len(word) for word in words) / len(words) if words else 0,
+            'sentence_count': len(sentences),
+            'avg_sentence_length': len(words) / len(sentences) if sentences else 0,
+            'unique_words': len(set(words)),
+            'special_chars_percent': len([c for c in text if not c.isalnum() and not c.isspace()]) / len(text) * 100 if text else 0,
+            'caps_words_count': len([w for w in words if w.isupper()]),
+            'morphological_analysis': [
+                {
+                    'text': token.text,
+                    'lemma': token.lemma_,
+                    'pos': token.pos_,
+                    'tag': token.tag_,
+                    'dep': token.dep_
+                }
+                for token in doc
+            ],
             'summary_stats': {
-                'pos_counts': pos_counts,
-                'dep_counts': dep_counts,
-                'total_tokens': total_tokens
-            },
-            'sentiment': sentiment
+                'pos_counts': dict(Counter(token.pos_ for token in doc)),
+                'dep_counts': dict(Counter(token.dep_ for token in doc)),
+                'total_tokens': len(doc)
+            }
         }
+        
+        # Add NER analysis
+        analysis['named_entities'] = self.extract_named_entities(text)
+        
+        # Add sentiment analysis
+        analysis['sentiment'] = self.analyze_sentiment(text)
+        
+        return analysis
 
     def _get_pos_description(self, pos: str) -> str:
         """Get user-friendly description of part of speech tags."""
