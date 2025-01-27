@@ -28,9 +28,9 @@ def build_query_conditions(keyword: str = "", filter_option: str = "all", game_i
         params.append(f"%{keyword}%")
 
     if filter_option == "positive":
-        conditions.append("r.is_positive = 'Positive'")
+        conditions.append("r.is_positive = 'Pozytywna'")
     elif filter_option == "negative":
-        conditions.append("r.is_positive = 'Negative'")
+        conditions.append("r.is_positive = 'Negatywna'")
 
     if game_id:
         conditions.append("r.app_id = ?")

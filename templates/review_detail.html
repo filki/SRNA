@@ -19,28 +19,28 @@
                 <div class="stat-item">
                     <i class="fas fa-building"></i>
                     <div class="stat-content">
-                        <span class="stat-label">Publisher</span>
+                        <span class="stat-label">Wydawca</span>
                         <span class="stat-value">{{ review.game_publisher }}</span>
                     </div>
                 </div>
                 <div class="stat-item">
                     <i class="fas fa-users"></i>
                     <div class="stat-content">
-                        <span class="stat-label">Owners</span>
+                        <span class="stat-label">Własciciele</span>
                         <span class="stat-value">{{ review.game_owners }}</span>
                     </div>
                 </div>
                 <div class="stat-item">
                     <i class="fas fa-gamepad"></i>
                     <div class="stat-content">
-                        <span class="stat-label">Genre</span>
+                        <span class="stat-label">Gatunek</span>
                         <span class="stat-value">{{ review.game_genre }}</span>
                     </div>
                 </div>
                 <div class="stat-item">
                     <i class="fas fa-language"></i>
                     <div class="stat-content">
-                        <span class="stat-label">Languages</span>
+                        <span class="stat-label">Jezyki</span>
                         <div class="stat-value languages-list">
                             {% for language in review.game_languages.split(',') %}
                                 <span class="language-item">{{ language.strip() }}</span>
@@ -51,7 +51,7 @@
                 <div class="stat-item">
                     <i class="fas fa-tags"></i>
                     <div class="stat-content">
-                        <span class="stat-label">Tags</span>
+                        <span class="stat-label">Tagi</span>
                         <div class="stat-value tags">
                             {% for tag in review.game_tags.split(',') %}
                                 <span class="tag">{{ tag.strip() }}</span>
@@ -85,12 +85,12 @@
     <!-- Text Analysis Section -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0 section-header">Text Analysis</h5>
+            <h5 class="mb-0 section-header">Analiza Tekstu</h5>
         </div>
         <div class="card-body">
             <!-- Sentiment Analysis -->
             <div class="sentiment-analysis mb-4">
-                <h6 class="text-muted mb-3 section-header" style="color: #66c0f4 !important; font-weight: 500;">Analiza sentymentu</h6>
+                <h6 class="text-muted mb-3 section-header" style="color: #66c0f4 !important; font-weight: 500;">Analiza Wydźwięku</h6>
                 <div class="sentiment-grid">
                     <div class="sentiment-item">
                         <div class="sentiment-score {{ review.text_stats.sentiment.assessment }}">
@@ -179,13 +179,13 @@
                             'caps_words_count': 'fa-font'
                         }[stat_name] }}"></i>
                         <span class="metric-label">{{ {
-                            'word_count': 'Word Count',
-                            'avg_word_length': 'Average Word Length',
-                            'sentence_count': 'Sentence Count',
-                            'avg_sentence_length': 'Average Sentence Length',
-                            'unique_words': 'Unique Words',
-                            'special_chars_percent': 'Special Characters %',
-                            'caps_words_count': 'Words in CAPS'
+                            'word_count': 'Liczba słów',
+                            'avg_word_length': 'Srednia długość słowa',
+                            'sentence_count': 'Liczba fraz',
+                            'avg_sentence_length': 'Srednia długość frazy',
+                            'unique_words': 'Liczba unikalnych słów',
+                            'special_chars_percent': 'Procent znaków specjalnych',
+                            'caps_words_count': 'Słowa w dużej literze'
                         }[stat_name] }}</span>
                         <span class="metric-value">{{ '%.1f'|format(stat_value) if stat_name in ['avg_word_length', 'avg_sentence_length', 'special_chars_percent'] else stat_value }}</span>
                     </div>
@@ -198,19 +198,19 @@
     <!-- Morphological Analysis Section -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0 section-header">Morphological Analysis</h5>
+            <h5 class="mb-0 section-header">Analiza Morfologiczna</h5>
         </div>
         <div class="card-body">
             <!-- Summary Stats -->
             <div class="summary-stats mb-4">
-                <h6 class="text-muted mb-3 section-header">Analysis Summary</h6>
+                <h6 class="text-muted mb-3 section-header">Podsumowanie Morfologiczne</h6>
                 <div class="summary-grid">
                     <div class="summary-item">
-                        <span class="summary-label">Total Tokens:</span>
+                        <span class="summary-label">Tokeny:</span>
                         <span class="summary-value">{{ review.text_stats.summary_stats.total_tokens }}</span>
                     </div>
                     <div class="summary-item">
-                        <span class="summary-label">Parts of Speech:</span>
+                        <span class="summary-label">Części mowy:</span>
                         <div class="tag-cloud">
                             {% for pos, count in review.text_stats.summary_stats.pos_counts.items() %}
                             <span class="tag" title="{{ count }} tokens">{{ pos }}</span>
@@ -229,11 +229,11 @@
                     </div>
                     <div class="token-details">
                         <div class="token-detail">
-                            <span class="detail-label">Base Form:</span>
+                            <span class="detail-label">Lemat:</span>
                             <span class="detail-value">{{ token.lemma }}</span>
                         </div>
                         <div class="token-detail">
-                            <span class="detail-label">Part of Speech:</span>
+                            <span class="detail-label">Część mowy:</span>
                             <span class="detail-value">{{ token.pos }}</span>
                         </div>
                         <div class="token-detail">
@@ -241,7 +241,7 @@
                             <span class="detail-value">{{ token.tag }}</span>
                         </div>
                         <div class="token-detail">
-                            <span class="detail-label">Dependency:</span>
+                            <span class="detail-label">Zależność:</span>
                             <span class="detail-value">{{ token.dep }}</span>
                         </div>
                     </div>
