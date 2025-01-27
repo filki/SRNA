@@ -27,6 +27,7 @@ class SearchService:
         """
         Calculate Jaccard similarity between two texts.
         Jaccard = (A ∩ B) / (A ∪ B) where A and B are sets of words
+        Returns value in [0,1] range
         """
         # Preprocess texts
         text1 = self.preprocess_text(text1)
@@ -44,7 +45,7 @@ class SearchService:
         if union == 0:
             return 0.0
             
-        return (intersection / union) * 100  # Convert to percentage
+        return float(intersection / union)  # Already in [0,1] range
 
     def calculate_tfidf_similarity(self, query: str, reviews: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Calculate TF-IDF based similarity scores"""
@@ -62,8 +63,35 @@ class SearchService:
         tfidf_matrix = self.tfidf_vectorizer.fit_transform(all_texts)
         cosine_similarities = cosine_similarity(tfidf_matrix[:-1], tfidf_matrix[-1:])
         
-        # Convert similarities to percentages
-        similarities = (cosine_similarities * 100).flatten()
+        # Similarities are already in [0,1] range from cosine_similarity
+        similarities = cosine_similarities.flatten()
+        
+        # Update review scores
+        for review, score in zip(reviews, similarities):
+            review['relevance'] = float(score)
+            
+        return reviews
+
+    def calculate_cosine_similarity(self, query: str, reviews: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Calculate pure cosine similarity using TF-IDF"""
+        if not reviews:
+            return []
+
+        # Prepare texts
+        review_texts = [self.preprocess_text(review['content']) for review in reviews]
+        query_text = self.preprocess_text(query)
+        
+        # Add query to the end of texts for vectorization
+        all_texts = review_texts + [query_text]
+        
+        # Calculate TF-IDF
+        tfidf_matrix = self.tfidf_vectorizer.fit_transform(all_texts)
+        
+        # Calculate cosine similarity
+        cosine_similarities = cosine_similarity(tfidf_matrix[:-1], tfidf_matrix[-1:])
+        
+        # Similarities are already in [0,1] range from cosine_similarity
+        similarities = cosine_similarities.flatten()
         
         # Update review scores
         for review, score in zip(reviews, similarities):
@@ -95,33 +123,6 @@ class SearchService:
                                     if word in self.word2vec_model.wv], axis=0)
                     self.review_vectors[review['id']] = vector
 
-    def calculate_cosine_similarity(self, query: str, reviews: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Calculate pure cosine similarity using TF-IDF"""
-        if not reviews:
-            return []
-
-        # Prepare texts
-        review_texts = [self.preprocess_text(review['content']) for review in reviews]
-        query_text = self.preprocess_text(query)
-        
-        # Add query to the end of texts for vectorization
-        all_texts = review_texts + [query_text]
-        
-        # Calculate TF-IDF
-        tfidf_matrix = self.tfidf_vectorizer.fit_transform(all_texts)
-        
-        # Calculate cosine similarity
-        cosine_similarities = cosine_similarity(tfidf_matrix[:-1], tfidf_matrix[-1:])
-        
-        # Convert similarities to percentages
-        similarities = (cosine_similarities * 100).flatten()
-        
-        # Update review scores
-        for review, score in zip(reviews, similarities):
-            review['relevance'] = float(score)
-            
-        return reviews
-
     def calculate_word2vec_similarity(self, query: str, reviews: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Calculate similarity using Word2Vec embeddings"""
         if not self.word2vec_model:
@@ -140,8 +141,9 @@ class SearchService:
         for review in reviews:
             if review['id'] in self.review_vectors:
                 review_vector = self.review_vectors[review['id']]
+                # cosine_similarity returns value in [-1,1], normalize to [0,1]
                 similarity = cosine_similarity([query_vector], [review_vector])[0][0]
-                review['relevance'] = float(similarity * 100)
+                review['relevance'] = float((similarity + 1) / 2)  # normalize to [0,1]
             else:
                 review['relevance'] = 0.0
                 
