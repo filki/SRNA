@@ -70,26 +70,6 @@ The application uses SQLite with the following main tables:
 - **authors**: Contains information about review authors
 - **games**: Stores game-related information
 
-## Features Implemented
-
-1. Web Application (Flask) - 15 points
-2. Large Dataset (>25,000 records) - 10 points
-3. SQLite Database - 10 points
-4. Multiple Search Filters - 6 points
-5. Text Analysis
-   - Basic morphological analysis - 10 points
-   - Named entity recognition - 10 points
-   - Sentiment analysis - 10 points
-6. Term Weighting
-   - TF-IDF - 10 points
-   - Jaccard similarity - 5 points
-7. Visualizations
-   - Multiple chart types - 16 points
-   - Interactive features - 2 points
-8. Result Caching - 5 points
-
-Total Points: 109
-
 ## Contributing
 
 Feel free to submit issues and enhancement requests!
