@@ -1,6 +1,7 @@
 # Steam Review Analysis System
 
 A comprehensive web application for analyzing Steam game reviews, built with Flask and modern data analysis tools.
+Much of the work is AI-generated, mostly by Claude Sonnet 3.5.
 
 ## Features
 
